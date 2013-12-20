@@ -88,7 +88,3 @@
 
 (function ($) {
     'use strict';
-
-    if (!$) {
-        $ = document;
-    }

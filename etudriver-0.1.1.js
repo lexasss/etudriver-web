@@ -89,10 +89,6 @@
 (function ($) {
     'use strict';
 
-    if (!$) {
-        $ = document;
-    }
-
     //////////////////////////////////// DOCUMENTATION START ///////////////////////////////////
     
     // Plugin constants and settings
@@ -470,7 +466,7 @@
         //   ec = {xl, yl, xr, yr} - eye-camera values (float 0..1)
         sample: null,
         
-        // Fires on target enter, leave and seelction
+        // Fires on target enter, leave and selection
         // arguments:
         //   event - a value from $.etudriver.event
         //   target - the target
@@ -3942,4 +3938,4 @@ function Scroller (options) {
    }
 }
 
-})(window.jQuery);
+})(window);
