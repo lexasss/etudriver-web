@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Highlighting by gaze</title>
+    <script type="text/javascript" src="libs/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="libs/html5slider.js"></script>
+    <script type="text/javascript" src="libs/webgl-heatmap.js"></script>
+    <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
+    <script type="text/javascript" src="heatmap.js"></script>
+	<link rel="stylesheet" type="text/css" href="heatmap.css">
+</head>
+<body>
+    <div id="image1" class="image invisible"></div>
+    <div id="image2" class="image invisible"></div>
+    <canvas id="heatmap"></canvas>
+    <div class="controls">
+        <div id="heatmap-size">
+            <label>Size <span></span></label><input style="width:80px" type="range" min="1" max="300" value="200"></input>
+        </div>
+        <div id="heatmap-intensity">
+            <label>Intensity <span></span></label><input style="width:80px" type="range" min="1" max="200" value="30"></input>
+        </div>
+    </div>    
+</body>
+</html>

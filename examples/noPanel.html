@@ -1,0 +1,151 @@
+<html>
+<head>
+    <title>Testing Gaze Tracker over WebSocket</title>
+    <!--script type="text/javascript" src="libs/jquery-2.0.3.min.js"></script-->
+    <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
+    
+    <script type="text/javascript">
+        var selCount = 0;
+        if (!window.$) {
+            window.$ = document;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            $.etudriver.init({
+                panel: {
+                    show: false
+                },
+                targets: [
+                    {
+                        selector: '.button',
+                        selection: {
+                            type: $.etudriver.selection.competitiveDwel,
+                            className: 'selected'
+                        }
+                    }
+                ]
+            }, {
+                state: function (state) {
+                    if (state.device) {
+                        device.innerHTML = state.device;
+                    }
+                    var setDisabled = function (button, disabled) {
+                        if (disabled) {
+                            button.classList.add('disabled');
+                        } else {
+                            button.classList.remove('disabled');
+                        }
+                    }
+                    
+                    setDisabled(options, !state.isServiceRunning || state.isTracking || state.isBusy);
+                    setDisabled(calibrate, !state.isConnected || state.isTracking || state.isBusy);
+                    setDisabled(toggle, !state.isCalibrated || state.isBusy);
+
+                    toggle.innerHTML = state.isTracking ? 'Stop' : 'Start';
+                }
+            });
+            
+            var device = document.getElementById('device');
+            var options = document.getElementById('options');
+            var calibrate = document.getElementById('calibrate');
+            var toggle = document.getElementById('toggle');
+            options.addEventListener('click', function () {
+                $.etudriver.showOptions();
+            });
+            calibrate.addEventListener('click', function () {
+                $.etudriver.calibrate();
+            });
+            toggle.addEventListener('click', function () {
+                $.etudriver.toggleTracking();
+            });
+        });
+
+    </script>
+    
+    <style>
+        body {
+            background-color: #CCCCCC;
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: deepskyblue;
+            margin: 20px;
+            width: 140px;
+            height: 140px;
+            
+            border: 1px solid black;
+            border-radius: 8px;
+            text-align: center;
+            font: 18pt arial, sans-serif;
+            color: black;
+            line-height: 140px;
+            vertical-align: middle;
+        }
+
+        .selected {
+            background-color: #CC4F39;
+            color: white;
+        }
+        
+        .panel {
+            position: fixed;
+            bottom: 4px;
+        }
+        
+        .panel > div {
+            background-color: #666666;
+            background-image: -webkit-linear-gradient(bottom, #666666, #7d7d7d);
+            background-image: -moz-linear-gradient(bottom, #666666, #7d7d7d);
+            background-image: -ms-linear-gradient(bottom, #666666, #7d7d7d);
+            background-image: -o-linear-gradient(bottom, #666666, #7d7d7d);
+            background-image: linear-gradient(bottom, #666666, #7d7d7d);
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            color: #e7e5e5;
+            cursor: pointer;
+            display: inline-block;
+            font: bold 13px Arial, Helvetica, sans-serif;
+            padding: 10px 20px;
+            margin: 10 px;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+        }
+        
+        .disabled {
+            background-color: #BBBBBB;
+            background-image: -webkit-linear-gradient(bottom, #CCCCCC, #BBBBBB) !important;
+            background-image: -moz-linear-gradient(bottom, #CCCCCC, #BBBBBB) !important;
+            background-image: -ms-linear-gradient(bottom, #CCCCCC, #BBBBBB) !important;
+            background-image: -o-linear-gradient(bottom, #CCCCCC, #BBBBBB) !important;
+            background-image: linear-gradient(bottom, #CCCCCC, #BBBBBB) !important;
+            color: #8A8A7B;
+            cursor: auto;
+            pointer-events: none;
+        }
+        
+        .label {
+            color: #003366;
+            display: inline-block;
+            font: bold 18px Arial, Helvetica, sans-serif;
+            padding: 0 10px;
+            min-width: 100px;
+            margin: auto;
+            text-align: center;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="panel">
+        <span id="device" class="label"></span>
+        <div id="options" class="disabled">Options</div>
+        <div id="calibrate" class="disabled">Calibrate</div>
+        <div id="toggle" class="disabled">Start</div>
+    </div>
+    <div class="button">1</div>
+    <div class="button">2</div>
+    <div class="button">3</div>
+</body>
+
+</html>

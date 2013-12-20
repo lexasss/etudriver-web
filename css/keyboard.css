@@ -1,0 +1,88 @@
+/* Obligatory formatting */
+
+.etud-keyboard {
+	border-collapse: collapse;
+	margin: 0;
+	position: fixed;
+	left: 0px;
+	table-layout: fixed;
+	width: 100%;
+	z-index: 2147483645;
+}
+
+.etud-keyboard-stickBottom {
+    bottom: 0;
+}
+
+.etud-keyboard-stickTop {
+    top: 0;
+}
+
+.etud-keyboard tr {
+    margin: 0;
+    padding: 0;
+}
+
+.etud-keyboard-button {
+    display: inline-block;
+    text-align: center;
+    line-height: 100%;
+    vertical-align: middle;
+    
+	float: left;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.etud-keyboard-button:after {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    width: 0;
+}
+
+.etud-keyboard-button > div {
+    background-position: center;
+    background-repeat: no-repeat;
+	display: inline-block;
+    height: 100%;
+    position: relative;
+    width: 100%;
+}
+
+.etud-keyboard-invisible {
+    display: none;
+    opacity: 0;
+}
+
+
+/* Customizable formatting */
+
+.etud-keyboardDefault {
+	background-image: linear-gradient(top, #730000, #400000 20px);
+	border-radius: 3px;
+	border-top: 1px solid #000000;
+	box-shadow: 0 0px 6px #BBBBBB;
+	padding: 15px;
+}
+
+.etud-keyboardDefault td {
+    padding: 5px;
+    height: 90px;
+}
+
+.etud-keyboardDefault-shrinked td {
+    height: 50px;
+}
+
+.etud-keyboard-buttonDefault {
+	background-color: #A0B0F0;
+	background-image: linear-gradient(top, #B3B3B3, #CCCCCC);
+	border: 1px solid #000000;
+ 	border-radius: 10px;
+	color: #333;
+	font: bold 18pt Arial, sans-serif;
+	margin: 0;
+}

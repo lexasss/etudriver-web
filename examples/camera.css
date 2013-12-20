@@ -1,0 +1,59 @@
+body {
+  background-color: black;
+  color: white;
+}
+
+#heatmap {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+#screenshot {
+  left: 0;
+  position: fixed;
+  top: 0;
+}
+
+#screenshot-img {
+  left: 0;
+  position: fixed;
+  top: 0;
+  height: 100%;
+}
+
+.fullscreen {
+  height: 100%;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.invisible {
+  display: none;
+}
+
+.error {
+  font-family: tahoma, sans-serif;
+  font-size: 14pt;
+}
+
+div.controls {
+  position: absolute;
+  top: 40px;
+  left: 10px;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+
+div.controls label {
+  display: inline-block;
+  width: 100px;
+}
+
+div.controls span {
+  display: inline-block;
+  float: right;
+  margin-right: 5px;
+}

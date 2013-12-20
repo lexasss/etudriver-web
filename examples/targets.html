@@ -1,0 +1,206 @@
+<html>
+<head>
+    <title>Testing Gaze Tracker over WebSocket</title>
+    <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
+    <script type="text/javascript">
+        if (!window.$) {
+            window.$ = document;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            var log = document.getElementById('log');
+            $.etudriver.settings.selection.duration = 100;
+            $.etudriver.init({
+                // custom settings
+                panel: {
+                    displaySamples: true
+                },
+                targets: [
+                    {
+                        selector: '.competitiveDwell',
+                        selection: {
+                            type: $.etudriver.selection.competitiveDwell,
+                            className: 'competitiveDwell-selected'
+                        },
+                        mapping: {
+                            className: 'competitiveDwell-focused'
+                        }
+                    },
+                    {
+                        selector: '.simpleDwell',
+                        selection: {
+                            type: $.etudriver.selection.simpleDwell,
+                            className: 'simpleDwell-selected',
+                            audio: 'examples/targets.wav'
+                        },
+                        mapping: {
+                            className: 'simpleDwell-focused'
+                        }
+                    },
+                    {
+                        selector: '.nod',
+                        selection: {
+                            type: $.etudriver.selection.nod,
+                            className: 'nod-selected'
+                        },
+                        mapping: {
+                            className: 'nod-focused'
+                        }
+                    }
+                ],
+                mapping: {
+                    type: $.etudriver.mapping.expanded,
+                    source: $.etudriver.source.samples
+                },
+                pointer: {
+                    size: 15,
+                    color: 'Blue',
+                    smoothing: {
+                        enabled: false
+                    }
+                },
+                progress: {
+                    size: 100,
+                    color: 'Red'
+                }
+            }, {
+                // callbacks
+                target: function (event, target) {
+                    log.innerHTML += '<div>' + event + ': ' + (target.textContent || target.innerText) + '</div>';
+                },
+                state: function (state) {
+                    if (state.isConnected) {
+                        document.getElementById('warning').classList.add('hidden');
+                    }
+                    if (state.isTracking) {
+                        log.innerHTML = '';
+                    }
+                }
+            });
+        });
+    </script>
+    
+    <style>
+        body {
+            background-color: #CCCCCC;
+        }
+        
+        #warning {
+            color: #DDDDDD;
+            font: bold 26pt Arial, sans-serif;
+            padding-top: 40pt;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #log {
+            padding-left: 20px;
+            position: absolute;
+            left: 20px;
+            top: 40px;
+        }
+       
+        #log > div {
+            margin: 6px;
+        }
+        
+        .container {
+            padding: 20px 0;
+            width: 100%;
+            text-align: center;
+        }
+       
+        .container:after {
+            content: '';
+            display: inline-block;
+            height: 90%;
+            vertical-align: middle;
+            width: 0;
+        }
+        
+        .etud-pointer {
+            background-color: Blue;
+        }
+       
+        .etud-target {
+            display: inline-block;
+            margin: 20px 100px;
+            width: 140px;
+            height: 140px;
+            
+            border: 1px solid black;
+            border-radius: 8px;
+            text-align: center;
+            font: 18pt arial, sans-serif;
+            color: black;
+            line-height: 140px;
+            vertical-align: middle;
+        }
+        
+        .simpleDwell {
+            background-color: DeepSkyBlue;
+        }
+        
+        .competitiveDwell {
+            background-color: Coral;
+        }
+
+        .nod {
+            background-color: DarkCyan;
+            color: white;
+        }        
+
+        .simpleDwell-focused {
+            background-color: Tomato;
+            color: white;
+        }        
+
+        .competitiveDwell-focused {
+            background-color: DarkGreen;
+            color: white;
+        }        
+
+        .nod-focused {
+            background-color: DeepPink;
+            color: white;
+        }        
+
+        .simpleDwell-selected {
+            background-color: Salmon;
+            color: white;
+        }        
+
+        .competitiveDwell-selected {
+            background-color: Green;
+            color: white;
+        }        
+
+        .nod-selected {
+            background-color: Red;
+            color: white;
+        }        
+    </style>
+    
+</head>
+
+<body>
+    <div id="warning">You need the "ETU-Driver Test" application running <br> with "WebSocket server" flag set on</div>
+    <div class="container">
+        <div class="etud-target simpleDwell">left SD</div>
+        <div class="etud-target simpleDwell">right SD</div>
+        <br>
+        <div class="etud-target competitiveDwell">left CD</div>
+        <div class="etud-target competitiveDwell">right CD</div>
+        <br>
+        <div class="etud-target nod">left NOD</div>
+        <div class="etud-target nod">right NOD</div>
+        <br>
+    </div>
+    <div id="log"></div>
+</body>
+
+</html>

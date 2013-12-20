@@ -1,0 +1,61 @@
+/* CSS animation, from animate.css, https://daneden.me/animate/ */
+.etud-animated {
+  animation-duration: 500ms;
+  animation-fill-mode: both;
+}
+
+.etud-animated-fadeInUp {
+    animation-name: etud-fadeInUp;
+}
+
+@keyframes etud-fadeInUp {
+    0% { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+}
+
+.etud-animated-fadeOutDown {
+    animation-name: etud-fadeOutDown;
+}
+
+@keyframes etud-fadeOutDown {
+    0% { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% { 
+        opacity: 0; 
+        transform: translateY(20px);
+    }
+}
+
+.etud-animated-fadeInHalf {
+    animation-name: etud-fadeInHalf;
+}
+
+@keyframes etud-fadeInHalf {
+    0% { 
+        opacity: 0.4;
+    }
+    100% { 
+        opacity: 1;
+    }
+}
+
+.etud-animated-fadeOutHalf {
+    animation-name: etud-fadeOutHalf;
+}
+
+@keyframes etud-fadeOutHalf {
+    0% { 
+        opacity: 1;
+    }
+    100% { 
+        opacity: 0.4;
+    }
+}
