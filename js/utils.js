@@ -9,6 +9,16 @@ var exception = function (name, message) {
     console.error(name + ': ' + message);
 }
 
+var storageAccessible = function () {
+    var result = true;
+    try {
+        result = !!localStorage;
+    } catch (ex) {
+        result = false;
+    }
+    return result;
+};
+
 /*! Modified 'detectDir' from
  * jscolor, JavaScript Color Picker v1.3.13, by Jan Odvarko, http://odvarko.cz
  */

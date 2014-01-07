@@ -138,13 +138,16 @@ body {
 }        
 ```
 
-## TODO
+## todo's
 
+### High priority
+- "system error correction" task: N x M targets on a full-screen fixed DIV
+  (N=10, M=20 in Towards Effective Eye Pointing for Gaze-Enhanced Human-Computer Interaction)
+
+### Moderate priority
 - custom probability map
 - online recalibration
 - scrolling keyboard (by head pose) 
-- support for dynamically changing page (target added/removed)
-- settings in localStorage
-- "system error correction" task: N x M targets on a full-screen fixed DIV
-  (N=10, M=20 in Towards Effective Eye Pointing for Gaze-Enhanced Human-Computer Interaction)
-- is it possible to use several trackers at once in etudriver-web?
+
+### Low priority
+- find out a way to support multiple eye trackers stream data same time

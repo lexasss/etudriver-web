@@ -98,7 +98,7 @@ $(function (){
     
     // Tracking
     
-    $.etudriver.init({
+    etudriver.init({
         panel: {
             show: true
         },

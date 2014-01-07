@@ -4,19 +4,15 @@
     <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
     
     <script type="text/javascript">
-        if (!window.$) {
-            window.$ = document;
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
-            $.etudriver.init({
+            etudriver.init({
                 mapping: {
-                    type: $.etudriver.mapping.expanded
+                    type: etudriver.mapping.expanded
                 },
                 scroller: { 
                     enabled: true,
                     speeds: [2, 8, 15, 0, -1],
-                    type: $.etudriver.scroller.fixation,
+                    type: etudriver.scroller.fixation,
                     imageFolder: '../images/scroller/'
                 }
             }, {

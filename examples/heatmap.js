@@ -62,7 +62,7 @@ $(function (){
     loadNewImage(images[0]);
 
     // Tracking
-    $.etudriver.init({
+    etudriver.init({
         panel: {
             show: true
         },
