@@ -1,0 +1,82 @@
+<html>
+<head>
+    <title>Gaze tracking with ETU-Driver over WebSocket: autofocus</title>
+    <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
+    
+    <script type="text/javascript">
+        var focusedInput;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            var log = document.getElementById('log');
+            
+            etudriver.init({
+                targets: [
+                    { 
+                        selector: 'input[type="text"], textarea',
+                        selection: {
+                            dwellTime: 500,
+                            showProgress: false,
+                            audio: false
+                        }
+                    }
+                ]
+            }, {
+                // callbacks
+                target: function (event, target) {
+                    if (event === etudriver.event.selected) {
+                        target.focus();
+                    }
+                },
+                state: function (state) {
+                    if (state.isConnected) {
+                        document.getElementById('warning').classList.add('hidden');
+                    }
+                    if (state.isTracking || state.isStopped) {
+                        focusedInput = null;
+                    }
+                }
+            });
+            
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+        });
+        
+    </script>
+    
+    <style>
+        body {
+            background-color: #7F7F7F;
+        }
+        
+        #warning {
+            color: #DDDDDD;
+            font: bold 26pt Arial, sans-serif;
+            padding-top: 40pt;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        input[type="text"] {
+            margin: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="warning">You need the "ETU-Driver Service" application running <br> with "WebSocket server" flag set on</div>
+    <input type="text" /><br>
+    <input type="text" /><br>
+    <input type="text" /><br>
+    <input type="text" /><br>
+    <input type="text" /><br>
+    <input type="text" /><br>
+    <div id="chat">
+    </div>
+</body>
+
+</html>

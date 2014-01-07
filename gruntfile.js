@@ -9,6 +9,7 @@ module.exports = function(grunt) {
                 src: [
                     'js/_start.js',
                     'js/main.js',
+                    'js/utils.js',
                     'js/fixdet.js',
                     'js/headcorr.js',
                     'js/smoother.js',
@@ -28,6 +29,7 @@ module.exports = function(grunt) {
                 src: [
                     'js/_start.js',
                     'js/main.js',
+                    'js/utils.js',
                     'js/fixdet.js',
                     'js/headcorr.js',
                     'js/smoother.js',

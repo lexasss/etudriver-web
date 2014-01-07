@@ -1,10 +1,3 @@
-// TODO:
-// - custom probability map
-// - online recalibration
-// - scrolling keyboard (by head pose) 
-// - support for dynamically changing page (target added/removed)
-// - settings to localStorage
-
 /*!
  *  ETU-Driver for web pages and applications
  *  

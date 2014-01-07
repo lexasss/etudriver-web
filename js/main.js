@@ -21,7 +21,7 @@
             
             // extra settings for settings.targets[].selection:
             //   dwellTime      - dwell time in ms
-            competitiveDwell: 1,
+            cumulativeDwell: 1,
             
             // extra settings for settings.targets[].selection:
             //   dwellTime      - dwell time in ms
@@ -166,7 +166,7 @@
                 },
                 
                 // type-dependent settings
-                competitiveDwell: {
+                cumulativeDwell: {
                     dwellTime: 1000,
                     showProgress: true
                 },
@@ -268,7 +268,7 @@
                                             //  - the keys from $.etudriver.settings.selection.defaults
                                             //  - the keys from $.etudriver.settings.selection.[TYPE] 
                                             //    (see comments to the corresponding type in $.etudriver.selection)
-                    type: $.etudriver.selection.competitiveDwell   // the default selection type
+                    type: $.etudriver.selection.cumulativeDwell   // the default selection type
                 },
                 mapping: {                  // specifies what happens when a target gets attention; accepts:
                                             //  - the keys from $.etudriver.settings.mapping.defaults
@@ -520,8 +520,8 @@
             ts.selection = extend(true, {}, $.etudriver.settings.selection.defaults, ts.selection);
             ts.mapping = extend(true, {}, $.etudriver.settings.mapping.defaults, ts.mapping);
             switch (ts.selection.type) {
-            case $.etudriver.selection.competitiveDwell:
-                extend(true, true, ts.selection, $.etudriver.settings.selection.competitiveDwell);
+            case $.etudriver.selection.cumulativeDwell:
+                extend(true, true, ts.selection, $.etudriver.settings.selection.cumulativeDwell);
                 break;
             case $.etudriver.selection.simpleDwell:
                 extend(true, true, ts.selection, $.etudriver.settings.selection.simpleDwell);
@@ -555,7 +555,7 @@
         for (var kbd in $.etudriver.keyboard) {
             var keyboardParams = $.etudriver.keyboard[kbd];
             if (!keyboardParams.selection || !keyboardParams.selection.type) {
-                keyboardParams.selection = { type: $.etudriver.selection.competitiveDwell };
+                keyboardParams.selection = { type: $.etudriver.selection.cumulativeDwell };
             }
 
             // extend the keyboard parameter with 'selection' and 'mapping'
@@ -614,7 +614,7 @@
 
         // scroller
         var scrollerSelection = {
-            type: $.etudriver.selection.competitiveDwell,
+            type: $.etudriver.selection.cumulativeDwell,
             className: '',
             duration: 0,  
             audio: '',
@@ -664,7 +664,7 @@
     // Add an object "gaze" to the DOM element with the following properties:
     //  - focused: boolean
     //  - selected: boolean
-    //  - attention: integer, holds the accumulated attention time (used for $.etudriver.selection.competitiveDwell)
+    //  - attention: integer, holds the accumulated attention time (used for $.etudriver.selection.cumulativeDwell)
     //  - selection: type of selection method (from $.etudriver.selection)
     //  - mapping: type of mapping method (from $.etudriver.mapping)
     //  - keyboard: null, or the keyboard that is available currently for the input into this element
@@ -835,7 +835,7 @@
     var deviceName = 'Mouse';
 
     var onWebSocketOpen = function (evt) {
-        //console.log(evt);
+        //debug('onWebSocketOpen', evt);
         if (controlPanel) {
             setWebSocketStatus(stateLabel.connected);
             controlPanel.classList.add(settings.panel.connectedClassName);
@@ -849,7 +849,7 @@
     };
 
     var onWebSocketClose = function (evt) {
-        //console.log(evt);
+        //debug('onWebSocketClose', evt);
         websocket = null;
         if (controlPanel) {
             currentDevice = '';
@@ -861,7 +861,7 @@
     };
 
     var onWebSocketMessage = function (evt) {
-        //console.log(evt.data);
+        //debug('onWebSocketMessage', evt.data);
         try {
             var state;
             var ge = JSON.parse(evt.data);
@@ -872,23 +872,23 @@
                     ondata(ge.ts, ge.x, ge.y, ge.p, ge.ec);
                 }
             } else if (ge.type === respondType.state) {
-                console.log('WebSocket got state: ' + evt.data);
+                debug('onWebSocketMessage', 'WebSocket got state: ' + evt.data);
                 state = updateState(ge.value);
                 onstate(state);
             } else if (ge.type === respondType.device) {
-                console.log('WebSocket got device: ' + evt.data);
+                debug('onWebSocketMessage', 'WebSocket got device: ' + evt.data);
                 deviceName = ge.name;
                 state = updateState(undefined, ge.name);
                 onstate(state);
             }
         } catch (e) {
-            console.log(e);
-            console.log(evt.data);
+            exception('onWebSocketMessage', e);
+            exception('onWebSocketMessage', evt.data);
         }
     };
 
     var onWebSocketError = function (evt) {
-        //console.log(evt);
+        debug('onWebSocketError', evt);
         if (lblLog) {
             lblLog.innerHTML = 'Problems in the connection to WebSocket server';
             setTimeout(function () {
@@ -909,7 +909,7 @@
     };
 
     var sendToWebSocket = function (message) {
-        console.log('WebSocket sent: ' + message);
+        debug('sendToWebSocket', 'WebSocket sent: ' + message);
         websocket.send(message);
     };
 
@@ -1217,9 +1217,9 @@
             }
             
             switch (target.gaze.selection.type) {
-            case choices.competitiveDwell:
+            case choices.cumulativeDwell:
                 if (lastSample) {
-                    if (selectCompetitiveDwell(target, ts - lastSample.ts)) {
+                    if (selectCumulativeDwell(target, ts - lastSample.ts)) {
                         result = target;
                     }
                 }
@@ -1282,7 +1282,7 @@
         }
     };
 
-    var selectCompetitiveDwell = function (target, duration) {
+    var selectCumulativeDwell = function (target, duration) {
         var result = false;
         var i;
         if (target === focused) {
@@ -1291,7 +1291,7 @@
                 result = true;
                 for (i = 0; i < targets.length; i += 1) {
                     var t = targets[i];
-                    if (t.gaze.selection.type === $.etudriver.selection.competitiveDwell) {
+                    if (t.gaze.selection.type === $.etudriver.selection.cumulativeDwell) {
                         t.gaze.attention = 0;
                     }
                 }
@@ -1421,7 +1421,7 @@
                     divisor *= 10;
                 }
 
-                //console.log('zoom = ' + (result / divisor) + ', calculated in ' + cycles + ' cycles');
+                //debug('updatePixelConverter', 'zoom = ' + (result / divisor) + ', calculated in ' + cycles + ' cycles');
                 return result / divisor;
             })(5);
 
@@ -1499,236 +1499,4 @@
         var nextAt = Math.round(samplingStart + (sampleCount + 1) * (1000.0 / settings.frequency));
         var pause = Math.max(0, nextAt - now);
         samplingTimer = setTimeout(processData, pause);
-    };
-    
-    /*! Modified 'detectDir' from
-     * jscolor, JavaScript Color Picker v1.3.13, by Jan Odvarko, http://odvarko.cz
-     */
-    var detectPath = function () {
-        var URI = function (uri) { // See RFC3986
-
-            this.scheme = null;
-            this.authority = null;
-            this.path = '';
-            this.query = null;
-            this.fragment = null;
-
-            this.parse = function(uri) {
-                var m = uri.match(/^(([A-Za-z][0-9A-Za-z+.-]*)(:))?((\/\/)([^\/?#]*))?([^?#]*)((\?)([^#]*))?((#)(.*))?/);
-                this.scheme = m[3] ? m[2] : null;
-                this.authority = m[5] ? m[6] : null;
-                this.path = m[7];
-                this.query = m[9] ? m[10] : null;
-                this.fragment = m[12] ? m[13] : null;
-                return this;
-            };
-
-            this.toString = function() {
-                var result = '';
-                if (this.scheme !== null) { result = result + this.scheme + ':'; }
-                if (this.authority !== null) { result = result + '//' + this.authority; }
-                if (this.path !== null) { result = result + this.path; }
-                if (this.query !== null) { result = result + '?' + this.query; }
-                if (this.fragment !== null) { result = result + '#' + this.fragment; }
-                return result;
-            };
-
-            this.toAbsolute = function (base) {
-                base = new URI(base);
-                var r = this;
-                var t = new URI();
-
-                if(base.scheme === null) { return false; }
-
-                if(r.scheme !== null && r.scheme.toLowerCase() === base.scheme.toLowerCase()) {
-                    r.scheme = null;
-                }
-
-                if(r.scheme !== null) {
-                    t.scheme = r.scheme;
-                    t.authority = r.authority;
-                    t.path = removeDotSegments(r.path);
-                    t.query = r.query;
-                } else {
-                    if(r.authority !== null) {
-                        t.authority = r.authority;
-                        t.path = removeDotSegments(r.path);
-                        t.query = r.query;
-                    } else {
-                        if(r.path === '') { 
-                            t.path = base.path;
-                            if(r.query !== null) {
-                                t.query = r.query;
-                            } else {
-                                t.query = base.query;
-                            }
-                        } else {
-                            if(r.path.substr(0,1) === '/') {
-                                t.path = removeDotSegments(r.path);
-                            } else {
-                                if(base.authority !== null && base.path === '') { 
-                                    t.path = '/'+r.path;
-                                } else {
-                                    t.path = base.path.replace(/[^\/]+$/,'')+r.path;
-                                }
-                                t.path = removeDotSegments(t.path);
-                            }
-                            t.query = r.query;
-                        }
-                        t.authority = base.authority;
-                    }
-                    t.scheme = base.scheme;
-                }
-                t.fragment = r.fragment;
-
-                return t;
-            };
-
-            function removeDotSegments(path) {
-                var out = '';
-                while(path) {
-                    if(path.substr(0,3)==='../' || path.substr(0,2)==='./') {
-                        path = path.replace(/^\.+/,'').substr(1);
-                    } else if(path.substr(0,3)==='/./' || path==='/.') {
-                        path = '/'+path.substr(3);
-                    } else if(path.substr(0,4)==='/../' || path==='/..') {
-                        path = '/'+path.substr(4);
-                        out = out.replace(/\/?[^\/]*$/, '');
-                    } else if(path==='.' || path==='..') {
-                        path = '';
-                    } else {
-                        var rm = path.match(/^\/?[^\/]*/)[0];
-                        path = path.substr(rm.length);
-                        out = out + rm;
-                    }
-                }
-                return out;
-            }
-
-            if(uri) {
-                this.parse(uri);
-            }
-
-        };
-
-        var i;
-		var base = location.href;
-
-		var e = document.getElementsByTagName('base');
-		for (i = 0; i < e.length; i += 1) {
-			if (e[i].href) { 
-                base = e[i].href; 
-            }
-		}
-
-        var re = /(^|\/)etudriver(-(\d+)\.(\d+)\.(\d+))?\.js([?#].*)?$/i;
-		e = document.getElementsByTagName('script');
-		for (i = 0; i < e.length; i += 1) {
-			if (e[i].src) { // && re.test(e[i].src))
-                var m = re.exec(e[i].src)
-                if (m) {
-                    var src = new URI(e[i].src);
-                    var srcAbs = src.toAbsolute(base);
-                    srcAbs.path = srcAbs.path.replace(/[^\/]+$/, ''); 
-                    srcAbs.query = null;
-                    srcAbs.fragment = null;
-                    return {
-                        path: srcAbs.toString(),
-                        version: typeof m[2] !== 'undefined' ? m[3] + '.' + m[4] + '.' + m[5] : ''
-                    }
-                }
-			}
-		}
-		return false;
-	};
-    
-    /*! Modified 'extend' from
-     * jQuery JavaScript Library v2.0.3, by jQuery Foundation, Inc. and other contributors, http://jquery.com/
-     * http://jquery.com/
-     */
-    var extend = function() {
-        var isPlainObject = function( obj ) {
-            if ( typeof obj !== 'object' || obj.nodeType || obj === obj.window ) {
-                return false;
-            }
-
-            return true;
-        };
-        
-        var options, name, src, copy, copyIsArray, clone,
-            target = arguments[0] || {},
-            i = 1,
-            length = arguments.length,
-            deep = false,
-            onlyIfUndefined = false;
-
-        // Handle a deep copy situation
-        if ( typeof target === 'boolean' ) {
-            deep = target;
-            target = arguments[i] || {};
-            // skip the boolean and the target
-            i += 1;
-        }
-
-        if ( typeof target === 'boolean' ) {
-            onlyIfUndefined = target;
-            target = arguments[i] || {};
-            i += 1;
-        
-        }
-        // Handle case when target is a string or something (possible in deep copy)
-        if ( typeof target !== 'object' && typeof target !== 'function' ) {
-            
-            target = {};
-        }
-
-        if ( length === i ) {
-            return target;
-        }
-
-        for ( ; i < length; i += 1 ) {
-            // Only deal with non-null/undefined values
-            if ( (options = arguments[ i ]) != null ) {
-                // Extend the base object
-                for ( name in options ) {
-                    src = target[ name ];
-                    copy = options[ name ];
-
-                    // Prevent never-ending loop
-                    if ( target === copy ) {
-                        continue;
-                    }
-
-                    // Recurse if we're merging plain objects or arrays
-                    if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
-                        if ( copyIsArray ) {
-                            copyIsArray = false;
-                            clone = src && Array.isArray(src) ? src : [];
-
-                        } else {
-                            clone = src && isPlainObject(src) ? src : {};
-                        }
-
-                        // Never move original objects, clone them
-                        target[ name ] = extend( deep, clone, copy );
-
-                    // Don't bring in undefined values
-                    } else if ( copy !== undefined ) {
-                        if (!onlyIfUndefined || target[ name ] === undefined) {
-                            target[ name ] = copy;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Return the modified object
-        return target;
-    };
-
-    var bool = function (value) {
-        if (typeof value === 'function') {
-            return value();
-        }
-        return !!value;
     };

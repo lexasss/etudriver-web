@@ -1,9 +1,9 @@
-{
+﻿{
   "name": "etudriver",
   "version": "0.1.1",
   "description": "Gaze on Web with ETU-Driver on WebSocket",
   "keywords": "gaze eye tracking web",
-  "author": "Oleg Spakov",
+  "author": "Oleg Špakov",
   "license": "LGPL",
   "main": "etudriver-0.1.1.js",
   "repository": {

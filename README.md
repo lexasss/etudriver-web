@@ -5,29 +5,29 @@ The JavaScript library to support eye-tracking on web pages. It communicates wit
 
 ## Features
 
-- gaze data from `ETU-Driver`
-- event when the tracking or other `ETU-Driver` state changes
-- commands for `ETU-Driver` to show options dilaog, calibrate, and toggle gaze tracking
-- embed a panel with buttons to execute thesse commands
+- streams gaze data from `ETU-Driver` into a web-page (see [the 'camera' and 'heatmap' examples] (https://github.com/lexasss/etudriver-web/tree/master/examples))
+- fires an event when the tracking or other `ETU-Driver` state changes
+- contains methods to send commands to `ETU-Driver` to show options window, calibrate, and toggle gaze tracking
+- embeds a panel with buttons to send these commands
 - shows gaze pointer
-- allows heads movements to be used for correcting the gaze pointer location
-- applies smooting for gaze pointer
-- allows using raw data or fixation data for pointing at targets
-- allows naive or advanced gaze-to-target mapping algorithms
-- detect nodding head gesture
+- allows using head movements for the gaze pointer location correction
+- applies smoothing for the gaze pointer
+- allows selecting between raw data or fixation data in mapping gaze-to-target calculation routine
+- provides several gaze-to-target mapping algorithms
+- detects nodding head gesture
 - allows to calibrate a custom head gesture
-- uses dwell time (naive of cumulative), nodding or custom head gestures for target selection
+- uses dwell time (naive or cumulative), nodding or custom head gestures for target selection
 - displays a progress of dwell time
-- developers may define few categories of targets, each with its own method of selection and visual feedback for mapping and selection events
-- page scrolling using 1) dedicated panels to fixate on, 2) head movements 
-- default or customized keyboard to display when a used selects a target of a certain category
-- keyboard customization is very flexible and allows controlling selections of each key
+- allows defining few categories of targets, each with its own method of selection and visual feedback for mapping and selection events (see [the 'targets' example] (https://github.com/lexasss/etudriver-web/tree/master/examples/targets.html))
+- allows page scrolling using 1) dedicated transparent panels to fixate on, 2) head movements (see [the 'scroller' example] (https://github.com/lexasss/etudriver-web/tree/master/examples/scroller.html))
+- contains a keyboard to display when a used selects a target of a certain category (see [the 'keyboard' example] (https://github.com/lexasss/etudriver-web/tree/master/examples))
+- allows defining custom keyboards; on a key selection, a custom scenario can be executed, this making keyboards very flexible that can be used not only for text input  (see [the 'keyboardSC' example] (https://github.com/lexasss/etudriver-web/tree/master/examples))
 
 ## Usage
 
-See [examples] (https://github.com/lexasss/etudriver-web/tree/master/examples) to get ideas of how and for what the library can be used. See comments in the JS file for the feature-by-feature explanation of the `etudriver` configuration
+See [examples] (https://github.com/lexasss/etudriver-web/tree/master/examples) to get ideas of how and for what the library can be used. See [comments] (https://github.com/lexasss/etudriver-web/blob/master/js/main.js) in the JS file for the feature-by-feature explanation of the `etudriver` configuration
 
-In HTML, include only the `etudriver-[version].js` or `etudriver-[version].min.js` file, the CSS file will be loaded automatically. The library exports `etudriver` variable. Initialize this variable when the page DOM is loaded (`DOMContentLoaded`).
+In HTML, include only the `etudriver-[version].js` or `etudriver-[version].min.js` file, the CSS file will be loaded automatically. The library exports `etudriver` variable. Initialize this variable when the page DOM is loaded (`DOMContentLoaded`). The basic code is shown in [this] (https://github.com/lexasss/etudriver-web/blob/master/examples/simplest.html) example.
 
 ### Methods
 
@@ -137,3 +137,14 @@ body {
     color: white;
 }        
 ```
+
+## TODO
+
+- custom probability map
+- online recalibration
+- scrolling keyboard (by head pose) 
+- support for dynamically changing page (target added/removed)
+- settings in localStorage
+- "system error correction" task: N x M targets on a full-screen fixed DIV
+  (N=10, M=20 in Towards Effective Eye Pointing for Gaze-Enhanced Human-Computer Interaction)
+- is it possible to use several trackers at once in etudriver-web?
