@@ -6,12 +6,8 @@
     
     <script type="text/javascript">
         var selCount = 0;
-        if (!window.$) {
-            window.$ = document;
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
-            $.etudriver.init({
+            etudriver.init({
                 panel: {
                     show: false
                 },
@@ -19,7 +15,7 @@
                     {
                         selector: '.button',
                         selection: {
-                            type: $.etudriver.selection.competitiveDwel,
+                            type: etudriver.selection.competitiveDwel,
                             className: 'selected'
                         }
                     }
@@ -50,13 +46,13 @@
             var calibrate = document.getElementById('calibrate');
             var toggle = document.getElementById('toggle');
             options.addEventListener('click', function () {
-                $.etudriver.showOptions();
+                etudriver.showOptions();
             });
             calibrate.addEventListener('click', function () {
-                $.etudriver.calibrate();
+                etudriver.calibrate();
             });
             toggle.addEventListener('click', function () {
-                $.etudriver.toggleTracking();
+                etudriver.toggleTracking();
             });
         });
 

@@ -3,14 +3,10 @@
     <title>Gaze tracking with ETU-Driver over WebSocket: targets of various response to gaze pointer</title>
     <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
     <script type="text/javascript">
-        if (!window.$) {
-            window.$ = document;
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
             var log = document.getElementById('log');
-            $.etudriver.settings.selection.duration = 100;
-            $.etudriver.init({
+            etudriver.settings.selection.duration = 100;
+            etudriver.init({
                 // custom settings
                 panel: {
                     displaySamples: true
@@ -19,7 +15,7 @@
                     {
                         selector: '.competitiveDwell',
                         selection: {
-                            type: $.etudriver.selection.competitiveDwell,
+                            type: etudriver.selection.competitiveDwell,
                             className: 'competitiveDwell-selected'
                         },
                         mapping: {
@@ -29,7 +25,7 @@
                     {
                         selector: '.simpleDwell',
                         selection: {
-                            type: $.etudriver.selection.simpleDwell,
+                            type: etudriver.selection.simpleDwell,
                             className: 'simpleDwell-selected',
                             audio: 'examples/targets.wav'
                         },
@@ -40,7 +36,7 @@
                     {
                         selector: '.nod',
                         selection: {
-                            type: $.etudriver.selection.nod,
+                            type: etudriver.selection.nod,
                             className: 'nod-selected'
                         },
                         mapping: {
@@ -49,8 +45,8 @@
                     }
                 ],
                 mapping: {
-                    type: $.etudriver.mapping.expanded,
-                    source: $.etudriver.source.samples
+                    type: etudriver.mapping.expanded,
+                    source: etudriver.source.samples
                 },
                 pointer: {
                     size: 15,

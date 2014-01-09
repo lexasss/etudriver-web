@@ -4,14 +4,10 @@
     <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
     
     <script type="text/javascript">
-        if (!window.$) {
-            window.$ = document;
-        }
-        
         document.addEventListener('DOMContentLoaded', function() {
             var log = document.getElementById('log');
             
-            $.etudriver.init({ /* use only default settings */ }, {
+            etudriver.init({ /* use only default settings */ }, {
                 // callbacks
                 target: function (event, target) {
                     log.innerHTML += '<div>' + event + ': ' + (target.textContent || target.innerText) + '</div>';
