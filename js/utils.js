@@ -1,14 +1,18 @@
+// Debugging
 var logDebug = true;
 var logException = true;
 
-var debug = function (name, message) {
-    console.log(name + ': ' + message);
+var debug = function () {
+    var text = Array.prototype.join.call(arguments, ': ');
+    console.log(text);
+};
+
+var exception = function () {
+    var text = Array.prototype.join.call(arguments, ': ');
+    console.error(text);
 }
 
-var exception = function (name, message) {
-    console.error(name + ': ' + message);
-}
-
+// Storage
 var storageAccessible = function () {
     var result = true;
     try {
@@ -19,6 +23,159 @@ var storageAccessible = function () {
     return result;
 };
 
+var getStoredValue = function (entry) {
+    var result = entry.default;
+    if (storageAccessible()) {
+        result = localStorage[entry.id] || result;
+    }
+    return result;
+};
+
+var store = function (entry, value) {
+    if (storageAccessible()) {
+        localStorage[entry.id] = value;
+    }
+};
+
+// Other
+var zoom = {x: 1.0, y: 1.0};
+var offset = {x: 0, y: 0};
+
+var updatePixelConverter = function () {
+
+    if (typeof devicePixelRatio === 'undefined') {    // old Firefox
+
+        var zoomLevel = (function (precision) {
+            var cycles = 0;
+            var searchZoomLevel = function (level, min, divisor) {
+                var wmq = window.matchMedia;
+                while (level >= min && !wmq('(min-resolution: ' + (level / divisor) + 'dppx)').matches) {
+                    level -= 1;
+                    cycles += 1;
+                }
+                return level;
+            };
+
+            var maxSearchLevel = 5.0;
+            var minSearchLevel = 0.1;
+            var divisor = 1;
+            var result;
+            var i;
+            for (i = 0; i < precision; i += 1) {
+                result = 10 * searchZoomLevel(maxSearchLevel, minSearchLevel, divisor);
+                maxSearchLevel = result + 9;
+                minSearchLevel = result;
+                divisor *= 10;
+            }
+
+            //debug('updatePixelConverter', 'zoom = ' + (result / divisor) + ', calculated in ' + cycles + ' cycles');
+            return result / divisor;
+        })(5);
+
+        zoom = {
+            x: zoomLevel,
+            y: zoomLevel
+        };
+    } 
+    else {    // Chrome, new Firefox
+        zoom = {
+            x: devicePixelRatio,
+            y: devicePixelRatio
+        };
+    }
+
+    if (window.mozInnerScreenX) {   // Firefox
+        offset = {
+            x: window.mozInnerScreenX * zoom.x,
+            y: window.mozInnerScreenY * zoom.y
+        };
+    } 
+    else {  // Chrome
+        var innerWidth = window.innerWidth * zoom.x;
+        var innerHeight = window.innerHeight * zoom.y;
+
+        offset = {
+            x: window.screenX + (window.outerWidth - innerWidth) / 2,
+            y: window.screenY + (window.outerHeight - innerHeight) - (window.outerWidth - innerWidth) / 2
+        };
+    }
+};
+
+var screenToClient = function (x, y) {
+    return {
+        x: (x - offset.x) / zoom.x,
+        y: (y - offset.y) / zoom.y
+    };
+};
+
+var clientToScreen = function (x, y) {
+    return {
+        x: x * zoom.x + offset.x,
+        y: y * zoom.x + offset.y
+    };
+};
+
+var getScreenSize = function () {
+    var result;
+    if (window.mozInnerScreenX) {
+        result = {
+            width: Math.round(screen.width * zoom.x), 
+            height: Math.round(screen.height * zoom.y)
+        };
+    }
+    else {
+        result = {width: screen.width, height: screen.height};
+    }
+    return result;
+};
+
+var getRandomInt = function () {
+    var min = arguments.length > 1 ? arguments[0] : 0;
+    var max = arguments.length > 0 ? arguments[arguments.length - 1] : 0xFFFFFFFF; // 32-bit value
+    return Math.floor(Math.random() * (max - min + 0.99999)) + min;
+};
+
+var clone = function (obj) {
+    // Handle the 3 simple types, and null or undefined
+    if (obj == null || typeof obj !== 'object') {
+        return obj;
+    }
+    
+    // Handle Date
+    if (obj instanceof Date) {
+        var copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        var copy = [];
+        for (var i = 0, len = obj.length; i < len; i++) {
+            copy[i] = clone(obj[i]);
+        }
+        return copy;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        var copy = obj.constructor();
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) {
+                if (obj[attr] === obj) {    // recursion handing
+                    copy[attr] = copy;
+                } else {
+                    copy[attr] = clone(obj[attr]);
+                }
+            }
+        }
+        return copy;
+    }
+    
+    return undefined;
+};
+
+// Imported
 /*! Modified 'detectDir' from
  * jscolor, JavaScript Color Picker v1.3.13, by Jan Odvarko, http://odvarko.cz
  */
@@ -243,8 +400,8 @@ var extend = function() {
     return target;
 };
 
-// In some functions, the boolean arguments may appear as not just a boolean value, 
-// but as a function that returns a boolean value
+// In some cases, a boolean setting may appear rather as a function that returns a boolean value, 
+// than just a boolean value itself
 var bool = function (value) {
     if (typeof value === 'function') {
         return value();

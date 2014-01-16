@@ -1,7 +1,6 @@
 // Head corrector
 
-function HeadCorrector() {
-    var tc = settings.headCorrector.transformParam;
+function HeadCorrector(settings) {
     var ref = null;
     var getAvg = function (ec) {
         var eyeCount = 0;
@@ -28,8 +27,8 @@ function HeadCorrector() {
     };
     this.correct = function (point, ec) {
         var pt = getAvg(ec);
-        var dx = (pt.x - ref.x) * tc;
-        var dy = (pt.y - ref.y) * tc;
+        var dx = (pt.x - ref.x) * settings.transformParam;
+        var dy = (pt.y - ref.y) * settings.transformParam;
         return {
             x: Math.round(point.x - dx), 
             y: Math.round(point.y + dy)

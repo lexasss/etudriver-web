@@ -185,6 +185,87 @@
   }
 }
 
+.etud-calibVerifier-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.etud-calibVerifier-container > .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 48px;
+  height: 48px;
+  background: url('images/calibVerifier/close.png') no-repeat center;
+}
+
+.etud-calibVerifier-target {
+  position: absolute;
+}
+
+.etud-calibVerifier-pulsator {
+  position: absolute;
+}
+
+.etud-calibVerifier-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.etud-calibVerifier-containerDefault {
+  background-color: #E0E0E0;
+}
+
+.etud-calibVerifier-targetDefault {
+  background-color: #000;
+}
+
+.etud-calibVerifier-pulsatorDefault {
+  background-color: #CCC;
+}
+
+.etud-calibVerifier-rating {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  font: 20pt/48px Arial, sans-serif;
+  color: #444;
+  text-align: center;
+}
+
+.etud-calibVerifier-rating > span {
+  margin: 0 0.5em;
+}
+
+.etud-calibVerifier-rating > .spacer {
+  display: inline-block;
+  width: 4em;
+}
+
+.etud-calibVerifier-rating > .star {
+  display: inline-block;
+  width: 48px;
+  height: 54px;
+  padding: 0;
+  vertical-align: sub;
+}
+
+.etud-calibVerifier-rating > .full {
+  background: url('images/calibVerifier/star-full.png') no-repeat center;
+}
+
+.etud-calibVerifier-rating > .half {
+  background: url('images/calibVerifier/star-half.png') no-repeat center;
+}
+
+.etud-calibVerifier-rating > .empty {
+  background: url('images/calibVerifier/star-empty.png') no-repeat center;
+}
+
 #etud-chgd-calibOverlay {
   background-color: black;
   background-color: rgba(0,0,0,.7);

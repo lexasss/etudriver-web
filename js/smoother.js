@@ -1,4 +1,4 @@
-function Smoother() {
+function Smoother(settings) {
     this.x = -1.0;
     this.y = -1.0;
     this.t = 0;
@@ -14,11 +14,10 @@ function Smoother() {
     };
     
     this.smooth = function (ts, x, y) {
-        var params = settings.pointer.smoothing;
         if (this.x < 0 && this.y < 0 && this.t === 0) {
             this.x = x;
             this.y = y;
-            this.t = params.low;
+            this.t = settings.low;
         }
 
         var i;
@@ -35,11 +34,11 @@ function Smoother() {
         for (i = 0; i < this.buffer.length; i += 1) {
             var smp = this.buffer[i];
             var dt = ts - smp.ts;
-            if (dt > (2 * params.timeWindow)) {
+            if (dt > (2 * settings.timeWindow)) {
                 this.buffer.shift();
                 validFilter = true;
             }
-            else if (dt > params.timeWindow) {
+            else if (dt > settings.timeWindow) {
                 avgXB += smp.x;
                 avgYB += smp.y;
                 ptsBeforeCount++;
@@ -61,7 +60,7 @@ function Smoother() {
             var dy = avgYB - avgYA;
             var dist = Math.sqrt(dx*dx + dy*dy);
 
-            this.t = dist > params.threshold ? params.high : params.low;
+            this.t = dist > settings.threshold ? settings.high : settings.low;
         }
 
         if (validFilter && !this.interval && this.buffer.length > 1) {

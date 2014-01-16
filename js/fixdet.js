@@ -15,8 +15,8 @@ function Fixation (ts, x, y) {
 //	ts: timestamp in milliseconds
 //	x: gaze x in pixels
 //	y: gaze y in pixels
-Fixation.prototype.addSample = function (ts, x, y) {
-    if(this.samples.length == settings.fixdet.bufferLength) {
+Fixation.prototype.addSample = function (bufferLength, ts, x, y) {
+    if(this.samples.length == bufferLength) {
         this.samples.shift();
     }
 
@@ -35,10 +35,12 @@ Fixation.prototype.addSample = function (ts, x, y) {
 };
 
 // Fixation detector
-var FixationDetector = {
+function FixationDetector(settings) {
+    
+    this.currentFix = null;
+
     // Operational variables
-    currentFix: null,
-    candidateFix: null,
+    var candidateFix = null;
 
     // Must be called when new sample is available
     // params:
@@ -47,51 +49,51 @@ var FixationDetector = {
     //	y: gaze y in pixels
     // returns:
     //	true if a new fixation starts, false otherwise
-    feed: function (ts, x, y) {
+    this.feed = function (ts, x, y) {
         var result = false;
         if (!this.currentFix) {
             this.currentFix = new Fixation(ts, x, y);
             result = true;
         }
-        else if (!this.candidateFix) {
+        else if (!candidateFix) {
             var dx = this.currentFix.x - x;
             var dy = this.currentFix.y - y;
             var dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < settings.fixdet.maxFixSize) {
-                this.currentFix.addSample(ts, x, y);
+            if (dist < settings.maxFixSize) {
+                this.currentFix.addSample(settings.bufferLength, ts, x, y);
             } else {
-                this.candidateFix = new Fixation(ts, x, y);
-                this.candidateFix.saccade.dx = x - this.currentFix.x;
-                this.candidateFix.saccade.dy = y - this.currentFix.y;
+                candidateFix = new Fixation(ts, x, y);
+                candidateFix.saccade.dx = x - this.currentFix.x;
+                candidateFix.saccade.dy = y - this.currentFix.y;
             }
         } else {
             var dxCurr = this.currentFix.x - x;
             var dyCurr = this.currentFix.y - y;
             var distCurr = Math.sqrt(dxCurr*dxCurr + dyCurr*dyCurr);
-            var dxCand = this.candidateFix.x - x;
-            var dyCand = this.candidateFix.y - y;
+            var dxCand = candidateFix.x - x;
+            var dyCand = candidateFix.y - y;
             var distCand = Math.sqrt(dxCand*dxCand + dyCand*dyCand);
-            if (distCurr < settings.fixdet.maxFixSize) {
-                this.currentFix.addSample(ts, x, y);
+            if (distCurr < settings.maxFixSize) {
+                this.currentFix.addSample(settings.bufferLength, ts, x, y);
             }
-            else if(distCand < settings.fixdet.maxFixSize) {
-                this.currentFix = this.candidateFix;
-                this.candidateFix = null;
-                this.currentFix.addSample(ts, x, y);
+            else if(distCand < settings.maxFixSize) {
+                this.currentFix = candidateFix;
+                candidateFix = null;
+                this.currentFix.addSample(settings.bufferLength, ts, x, y);
                 result = true;
             }
             else {
-                this.candidateFix = new Fixation(ts, x, y);
-                this.candidateFix.saccade.dx = x - this.currentFix.x;
-                this.candidateFix.saccade.dy = y - this.currentFix.y;
+                candidateFix = new Fixation(ts, x, y);
+                candidateFix.saccade.dx = x - this.currentFix.x;
+                candidateFix.saccade.dy = y - this.currentFix.y;
             }
         }
 
         return result;
-    },
+    };
     
-    reset: function () {
+    this.reset = function () {
         this.currentFix = null;
-        this.candidateFix = null;
-    }
+        candidateFix = null;
+    };
 };

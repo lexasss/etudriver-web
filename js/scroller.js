@@ -1,4 +1,4 @@
-function Scroller (options) {
+function Scroller (settings) {
 
     var enabled = false;
     var ref = null;
@@ -10,13 +10,13 @@ function Scroller (options) {
     var fadeIn = function (element) {
         element.classList.remove('etud-animation');
         element.classList.remove('etud-animated-fadeOutHalf');
-        element.classList.add(options.className + '-keyOpaque');
+        element.classList.add(settings.className + '-keyOpaque');
         element.classList.add('etud-animated-fadeInHalf');
         element.classList.add('etud-animated');
     };
     
     var fadeOut = function (element) {
-        element.classList.remove(options.className + '-keyOpaque');
+        element.classList.remove(settings.className + '-keyOpaque');
         element.classList.remove('etud-animation');
         element.classList.remove('etud-animated-fadeInHalf');
         element.classList.add('etud-animated-fadeOutHalf');
@@ -61,11 +61,11 @@ function Scroller (options) {
     
     var createCells = function (container, isScrollingUp) {
         var row = container.insertRow(-1);
-        for (var i = 0; i < options.speeds.length; i += 1) {
-            var speed = options.speeds[i];
+        for (var i = 0; i < settings.speeds.length; i += 1) {
+            var speed = settings.speeds[i];
             
             var btn = document.createElement('div');
-            btn.className = options.className + '-key';
+            btn.className = settings.className + '-key';
             
             var imgDir = isScrollingUp ? 'Up' : 'Down';
             var img = '';
@@ -76,7 +76,7 @@ function Scroller (options) {
                 img = 'page' + imgDir;
             }
             if (img) {
-                btn.style.backgroundImage = 'url(\'' + options.imageFolder + img + '.png\')';
+                btn.style.backgroundImage = 'url(\'' + settings.imageFolder + img + '.png\')';
             }
             
             btn.scroller = {
@@ -96,8 +96,8 @@ function Scroller (options) {
     
     var createContainer = function (isUpper) {
         var container = document.createElement('table');
-        container.className = options.className;
-        container.classList.add(options.className + (isUpper ? '-upper' : '-lower'));
+        container.className = settings.className;
+        container.classList.add(settings.className + (isUpper ? '-upper' : '-lower'));
         createCells(container, isUpper);
         
         document.body.appendChild(container);
@@ -124,7 +124,7 @@ function Scroller (options) {
         return {x: ecx, y: ecy};
     };
     
-    if (options.type === $.etudriver.scroller.fixation) {
+    if (settings.type === $.etudriver.scroller.fixation) {
         var upper = createContainer(true);
         var lower = createContainer(false);
     }
@@ -141,9 +141,9 @@ function Scroller (options) {
         var pt = getAvg(ec);
         var dy = pt.y - ref.y;
 
-        if (Math.abs(dy) >= options.headPose.threshold) {
-            headPose.speed = (Math.abs(dy) - options.headPose.threshold) * 
-                (dy < 0 ? -1 : 1) * options.headPose.transformParam;
+        if (Math.abs(dy) >= settings.headPose.threshold) {
+            headPose.speed = (Math.abs(dy) - settings.headPose.threshold) * 
+                (dy < 0 ? -1 : 1) * settings.headPose.transformParam;
             if (!headPose.timer) {
                 headPose.timer = setInterval(function () {
                     if (!enabled) {

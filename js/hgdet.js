@@ -28,7 +28,8 @@ HGDSample.prototype.setMatched = function (ruleIndex, matched) {
 // Head gesture detector
 // params:
 //   - rules: a list of rules
-function HeadGestureDetector(rules) {
+function HeadGestureDetector(rules, settings) {
+    this.settings = settings;
     this.rules = rules;
     this.buffer = [];
     this.eventIsOn = false;
@@ -51,7 +52,7 @@ HeadGestureDetector.prototype.feed = function (ts, x, y, ec, focused) {
     var result = null;
     if (ec) {
         for (var i = 0; i < this.buffer.length; i++) {
-            if (ts - this.buffer[i].ts > settings.headGesture.timeWindow) {
+            if (ts - this.buffer[i].ts > this.settings.timeWindow) {
                 this.buffer.shift();
                 this.canTest = true;
             } else {
@@ -148,6 +149,10 @@ HeadGestureDetector.prototype.test = function (sample) {
 
         sample.setMatched(i, detected);
     }
+    
+    if (debug) {
+        debug(sample.matched); 
+    }
 };
 
 HeadGestureDetector.prototype.searchPattern = function () {
@@ -195,7 +200,7 @@ HeadGestureDetector.prototype.searchPattern = function () {
 
     var allMatched = start && end && (end.ts - start.ts) < maxInterval && (end.ts - start.ts) > minInterval ? true : false;
     if (allMatched && !this.eventIsOn) {
-        result = {object: start.focused};
+        result = {name: 'nod', object: start.focused};
         //extend(true, result, this.computeEyeGazePoints(i));
         
         while (this.buffer.length > 0) {

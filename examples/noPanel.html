@@ -1,19 +1,20 @@
 <html>
 <head>
     <title>Gaze tracking with ETU-Driver over WebSocket: custom button to control an eye-tracker</title>
-    <!--script type="text/javascript" src="libs/jquery-2.0.3.min.js"></script-->
-    <script type="text/javascript" src="../etudriver-0.1.1.js"></script>
-    
+    <script type="text/javascript" src="../etudriver-0.2.0.js"></script>
+
     <script type="text/javascript">
         var selCount = 0;
         document.addEventListener('DOMContentLoaded', function() {
             etudriver.init({
                 panel: {
-                    show: false
+                    show: function () {
+                        return false;
+                    }
                 },
                 targets: [
                     {
-                        selector: '.button',
+                        selector: '.gaze',
                         selection: {
                             type: etudriver.selection.competitiveDwel,
                             className: 'selected'
@@ -32,18 +33,20 @@
                             button.classList.remove('disabled');
                         }
                     }
-                    
+
                     setDisabled(options, !state.isServiceRunning || state.isTracking || state.isBusy);
                     setDisabled(calibrate, !state.isConnected || state.isTracking || state.isBusy);
+                    setDisabled(verify, !state.isTracking);
                     setDisabled(toggle, !state.isCalibrated || state.isBusy);
 
                     toggle.innerHTML = state.isTracking ? 'Stop' : 'Start';
                 }
             });
-            
+
             var device = document.getElementById('device');
             var options = document.getElementById('options');
             var calibrate = document.getElementById('calibrate');
+            var verify = document.getElementById('verify');
             var toggle = document.getElementById('toggle');
             options.addEventListener('click', function () {
                 etudriver.showOptions();
@@ -51,25 +54,79 @@
             calibrate.addEventListener('click', function () {
                 etudriver.calibrate();
             });
+            verify.addEventListener('click', function () {
+                var buttons = document.querySelectorAll('.gaze');
+                for (var i = 0; i < buttons.length; i++) {
+                    buttons[i].classList.remove('gaze');
+                };
+                etudriver.updateTargets();
+
+                etudriver.verifyCalibration({
+                        rows: 3,
+                        columns: 3,
+                        duration: 1500,
+                        transitionDuration: 400,
+                        pulsation: {
+                            enabled: true,         // if set to "true", the target has an "aura" that pulsates
+                            duration: 500,          // pulsation cycle duration, ms
+                            size: 20                // size of "aura", px
+                        }
+                    },{
+                    started: function (target) {
+                        console.log('Next target at [' + target.cell.row + ' ' + target.cell.col + ']');
+                    },
+                    targetStarted: function (target) {
+                        console.log('started target at [' + target.cell.row + ' ' + target.cell.col + ']');
+                    },
+                    targetFinished: function (finished, next) {
+                        console.log('Finished target at [' + finished.cell.row + ' ' + finished.cell.col + ']');
+                        if (next) {
+                            console.log('Next target at [' + next.cell.row + ' ' + next.cell.col + ']');
+                        }
+                    },
+                    finished: function (result) {
+                        var avgToText = function (name, value) {
+                            return name + ': ' + value.mean.toFixed(1) + ' (' + value.std.toFixed(1) + ')';
+                        }
+                        console.log(avgToText('Amplitude', result.amplitude));
+                        console.log(avgToText('Angle', result.angle));
+                        console.log(avgToText('STD', result.std));
+                        console.log('Rating: amplitude = ' + result.interpretation.rating.amplitude +
+                            ', uniformity = ' + result.interpretation.rating.uniformity);
+
+                        if (result.apx.h) {
+                            console.log('H: ' + (result.apx.h.map(function (v) { return v.toFixed(1); })).join(', '));
+                        }
+                        if (result.apx.v) {
+                            console.log('V: ' + (result.apx.v.map(function (v) { return v.toFixed(1); })).join(', '));
+                        }
+
+                        for (var i = 0; i < buttons.length; i++) {
+                            buttons[i].classList.add('gaze');
+                        };
+                        etudriver.updateTargets();
+                    }
+                });
+            });
             toggle.addEventListener('click', function () {
                 etudriver.toggleTracking();
             });
         });
 
     </script>
-    
+
     <style>
         body {
             background-color: #CCCCCC;
         }
-        
+
         .button {
             display: inline-block;
             background-color: deepskyblue;
             margin: 20px;
             width: 140px;
             height: 140px;
-            
+
             border: 1px solid black;
             border-radius: 8px;
             text-align: center;
@@ -83,12 +140,12 @@
             background-color: #CC4F39;
             color: white;
         }
-        
+
         .panel {
             position: fixed;
             bottom: 4px;
         }
-        
+
         .panel > div {
             background-color: #666666;
             background-image: -webkit-linear-gradient(bottom, #666666, #7d7d7d);
@@ -106,7 +163,7 @@
             margin: 10 px;
             text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
         }
-        
+
         .disabled {
             background-color: #BBBBBB;
             background-image: -webkit-linear-gradient(bottom, #CCCCCC, #BBBBBB) !important;
@@ -118,7 +175,7 @@
             cursor: auto;
             pointer-events: none;
         }
-        
+
         .label {
             color: #003366;
             display: inline-block;
@@ -127,6 +184,18 @@
             min-width: 100px;
             margin: auto;
             text-align: center;
+        }
+
+        .calibver-background {
+            background-color: #FFFFCC;
+        }
+
+        .calibver-target {
+            background-color: blue;
+        }
+
+        .calibver-pulsator {
+            background-color: red;
         }
 
     </style>
@@ -138,10 +207,11 @@
         <div id="options" class="disabled">Options</div>
         <div id="calibrate" class="disabled">Calibrate</div>
         <div id="toggle" class="disabled">Start</div>
+        <div id="verify" class="disabled">Verify</div>
     </div>
-    <div class="button">1</div>
-    <div class="button">2</div>
-    <div class="button">3</div>
+    <div class="button gaze">1</div>
+    <div class="button gaze">2</div>
+    <div class="button gaze">3</div>
 </body>
 
 </html>

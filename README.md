@@ -22,6 +22,7 @@ The JavaScript library to support eye-tracking on web pages. It communicates wit
 - allows page scrolling using 1) dedicated transparent panels to fixate on, 2) head movements (see [the 'scroller' example] (https://github.com/lexasss/etudriver-web/tree/master/examples/scroller.html))
 - contains a keyboard to display when a used selects a target of a certain category (see [the 'keyboard' example] (https://github.com/lexasss/etudriver-web/tree/master/examples))
 - allows defining custom keyboards; on a key selection, a custom scenario can be executed, this making keyboards very flexible that can be used not only for text input  (see [the 'keyboardSC' example] (https://github.com/lexasss/etudriver-web/tree/master/examples))
+- calibration verification procedure; custom target presentation is allowed
 
 ## Usage
 
@@ -33,11 +34,12 @@ In HTML, include only the `etudriver-[version].js` or `etudriver-[version].min.j
 
 - `init (settings, callbacks)`: initializes the library; takes custom settings and callbacks (see the sections below for the description)
 - `updateTargets ()`: updates targets, if they have been changed
-- `calibrateCustomHeadGesture (name, onfinished)`: shows the custom head gesture calibration window; takes the detector name and a callback function that is called on closing the calibration window (arguments: 'name' the name of detector)
-- `showOptions (onclosed)`: shows `ETU-Driver` options dialog; takes a callback function that is called when the options dialog is closed (arguments: accepted: boolean, true if a user pressed "OK" button, false otherwise)
-- `calibrate (onfinished)`: calibrates the current device; takes a callaback function that is called when the calibration is finished (arguments: accepted: boolean, true if a new calibration was accepted, false otherwise)
+- `calibrateCustomHeadGesture (name, callback)`: shows the custom head gesture calibration window; takes the detector name and a callback function that is called on closing the calibration window (arguments: 'name' the name of detector)
+- `showOptions (callback)`: shows `ETU-Driver` options dialog; takes a callback function that is called when the options dialog is closed (arguments: accepted: boolean, true if a user pressed "OK" button, false otherwise)
+- `calibrate (callback)`: calibrates the current device; takes a callback function that is called when the calibration is finished (arguments: accepted: boolean, true if a new calibration was accepted, false otherwise)
 - `toggleTracking ()`: toggles tracking
 - `getKeyboard (name)`: returns the keyboard object; takes the keyboard name
+- `verifyCalibration (settings, callbacks)`: run the calibration verification procedure
 
 ### Settings
 
@@ -138,11 +140,14 @@ body {
 }        
 ```
 
+## Known issues
+
+Not yet discovered (check the 'Issues' section), but should be many, as the code is very raw yet.
+
 ## todo's
 
 ### High priority
-- "system error correction" task: N x M targets on a full-screen fixed DIV
-  (N=10, M=20 in Towards Effective Eye Pointing for Gaze-Enhanced Human-Computer Interaction)
+- none
 
 ### Moderate priority
 - custom probability map

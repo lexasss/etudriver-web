@@ -25,7 +25,7 @@ function CHGD_Error(left, right) {
     this.right = right || 0.0;
 }
 
-function CustomHeadGestureCalibrator(callback) {
+function CustomHeadGestureCalibrator(settings, callback) {
     var onClosed = callback;
     var onCalibStateChanged = null;
     
@@ -47,7 +47,7 @@ function CustomHeadGestureCalibrator(callback) {
     var avgSignal = null;
     var maxSignalChange = new CHGD_EC();
     
-    var calibCount = settings.customHeadGestureDetector.calibration.trials;
+    var calibCount = settings.calibration.trials;
     
     var calibrationPanel = document.createElement('div');
     calibrationPanel.id = 'etud-chgd-calibOverlay';
@@ -66,15 +66,15 @@ function CustomHeadGestureCalibrator(callback) {
     
     var canvas = document.createElement('canvas');
     canvas.id = 'etud-chgd-calibCanvas';
-    canvas.width = Math.round(320 * settings.customHeadGestureDetector.calibration.plotSizeFactor);
-    canvas.height = Math.round(240 * settings.customHeadGestureDetector.calibration.plotSizeFactor);
+    canvas.width = Math.round(320 * settings.calibration.plotSizeFactor);
+    canvas.height = Math.round(240 * settings.calibration.plotSizeFactor);
     document.getElementById('etud-chgd-calib').appendChild(canvas);
     
     var calibPlot = canvas.getContext('2d');
     
     var findSignificantChange = function (signal, refIdx, from, to, inc) {
         var result = -1;
-        var threshold = settings.customHeadGestureDetector.calibration.threshold;
+        var threshold = settings.calibration.threshold;
         var ref = signal[refIdx];
         for (var i = from; inc > 0 ? (i < to) : (i >= to); i += inc) {
             var pt = signal[i];
@@ -344,7 +344,7 @@ function CustomHeadGestureCalibrator(callback) {
         var durations = [];
         var zeroSignalSizeCount = 0;
         
-        var threshold = settings.customHeadGestureDetector.calibration.threshold;
+        var threshold = settings.calibration.threshold;
         var i, j, idx, s, endIdx;
 
         // search gesture start, end and duration in each trial
@@ -460,7 +460,7 @@ function CustomHeadGestureCalibrator(callback) {
             if (controllerCmd % 2 === 1) {
                 currentSignal = [];
                 signals.push(currentSignal);
-                interval = settings.customHeadGestureDetector.calibration.trialDuration;
+                interval = settings.calibration.trialDuration;
                 text = [];
                 if (onCalibStateChanged) {
                     onCalibStateChanged('start');
@@ -468,7 +468,7 @@ function CustomHeadGestureCalibrator(callback) {
             }
             else {
                 currentSignal = null;
-                interval = settings.customHeadGestureDetector.calibration.pauseDuration;
+                interval = settings.calibration.pauseDuration;
                 text = ['Gesture recorded', 'Prepare for the next'];
                 if (onCalibStateChanged) {
                     onCalibStateChanged('stop');
@@ -608,7 +608,7 @@ function CustomHeadGestureCalibrator(callback) {
     };
 }
 
-function CustomHeadGestureDetector(_name) {
+function CustomHeadGestureDetector(_name, settings) {
     this.modes = {
         none: 0,
         calibration: 1,
@@ -618,7 +618,7 @@ function CustomHeadGestureDetector(_name) {
     
     this.current = null;
     
-    var calibrator = new CustomHeadGestureCalibrator(function () {
+    var calibrator = new CustomHeadGestureCalibrator(settings, function () {
         // handle the closing event caused by user (the calibration was terminated)
     });
     
@@ -657,8 +657,8 @@ function CustomHeadGestureDetector(_name) {
     };
 
     var processSignal = function (timestamp) {
-        var isRelieableTime = (timestamp - lastGestureDetectionTime) > settings.customHeadGestureDetector.detection.minPause;
-        var canUseAsRef = settings.customHeadGestureDetector.detection.alterRefSignalOnDetection && !isGesture && isRelieableTime;
+        var isRelieableTime = (timestamp - lastGestureDetectionTime) > settings.detection.minPause;
+        var canUseAsRef = settings.detection.alterRefSignalOnDetection && !isGesture && isRelieableTime;
 
         var result = {};
         if (mode === this.modes.training) {

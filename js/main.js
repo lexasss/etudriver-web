@@ -348,6 +348,32 @@ var settings = {
             transformParam: 500     // transformation coefficient
         }
     },
+    calibVerifier: {
+        display: true,              // set to false if custom targets will be displayed
+        rows: 4,
+        columns: 5,
+        size: 12,                   // target size in pixels
+        duration: 1500,             // target exposition time; note that sample gathering starts 500ms after a target is displayed
+        transitionDuration: 800,    // time to travel from one location to another; set to 0 for no animation
+        displayResults: 60,         // results display time in seconds; set to 0 not to display the result
+        interpretationThreshold: 20,// amplitude difference threshold (px) used in the interpretation of the verification results
+        pulsation: {
+            enabled: false,         // if set to "true", the target has "aura" that pulsates
+            duration: 600,          // pulsation cycle duration, ms
+            size: 20                // size of "aura", px
+        },
+        className: {
+            container: 'etud-calibVerifier-containerDefault',
+            target: 'etud-calibVerifier-targetDefault',
+            pulsator: 'etud-calibVerifier-pulsatorDefault'
+        },
+        resultColors: {                // colors of the object painted in the resulting view
+            target: '#444',
+            sample: '#48C',
+            offset: 'rgba(224,160,64,0.5)',
+            text: '#444'
+        }
+    },
     port: 8086,         // the port the WebSocket works on
     frequency: 0        // sampling frequency in Hz, between 10 and 1000 (other values keep the original tracker frequency)
 };
@@ -395,9 +421,9 @@ var callbacks = {
 // Initialization.
 //   Must be called when a page is loaded
 //   arguments:
-//      - _settings: overwrites the default settings, see settings variable
-//      - _callbacks: fills the 'callbacks' object with handlers
-$.etudriver.init = function (_settings, _callbacks) {
+//      - customSettings: overwrites the default settings, see settings variable
+//      - customCallbacks: fills the 'callbacks' object with handlers
+$.etudriver.init = function (customSettings, customCallbacks) {
 
     // Helping functions
     var loadCSS = function (href) {
@@ -464,7 +490,7 @@ $.etudriver.init = function (_settings, _callbacks) {
         var list = document.getElementById('etud-chgd-calibList');
         for (var name in required) {
             if (!chgDetectors[name]) {
-                chgDetectors[name] = new CustomHeadGestureDetector(name);
+                chgDetectors[name] = new CustomHeadGestureDetector(name, settings.customHeadGestureDetector);
                 var li = document.createElement('li');
                 var btn = document.createElement('input');
                 btn.type = 'button';
@@ -507,10 +533,10 @@ $.etudriver.init = function (_settings, _callbacks) {
     path = etudScript !== false ? etudScript.path : '';
     
     // combine the default and custom settings
-    extend(true, settings, _settings);
+    extend(true, settings, customSettings);
     
     // add callbacks
-    extend(true, callbacks, _callbacks);
+    extend(true, callbacks, customCallbacks);
     
     var needProgress = false;
     var needNodDetector = false;
@@ -595,7 +621,7 @@ $.etudriver.init = function (_settings, _callbacks) {
         loadCSS(fileName);
     }
 
-    if (settings.panel.show) {
+    if (bool(settings.panel.show)) {
         createPanel();
     }
     
@@ -610,7 +636,9 @@ $.etudriver.init = function (_settings, _callbacks) {
         document.body.appendChild(progress);
     }
     
-    headCorrector = new HeadCorrector();
+    fixdet = new FixationDetector(settings.fixdet);
+    
+    headCorrector = new HeadCorrector(settings.headCorrector);
 
     // scroller
     var scrollerSelection = {
@@ -641,15 +669,16 @@ $.etudriver.init = function (_settings, _callbacks) {
     }
     
     scroller = new Scroller(settings.scroller);
+    calibVerifier = new CalibrationVerifier(settings.calibVerifier);
     
     // Smoother
-    if (settings.pointer.smoothing.enabled) {
-        smoother = new Smoother();
+    if (bool(settings.pointer.smoothing.enabled)) {
+        smoother = new Smoother(settings.pointer.smoothing);
     }
     
     // Multiple node detectors may exists, the settings should come from settings.targets[type == 'nod'].selection
     if (needNodDetector) {
-        nodDetector = new HeadGestureDetector($.etudriver.settings.selection.nod);
+        nodDetector = new HeadGestureDetector($.etudriver.settings.selection.nod, settings.headGesture);
     }
     
     createCalibrationList(requiredCustomHeadGestureDetectors);
@@ -661,7 +690,7 @@ $.etudriver.init = function (_settings, _callbacks) {
 
 // Updates the list of targets
 // Must be called when a target was added, removed, or relocated
-// Add an object "gaze" to the DOM element with the following properties:
+// Adds an object "gaze" to the DOM element with the following properties:
 //  - focused: boolean
 //  - selected: boolean
 //  - attention: integer, holds the accumulated attention time (used for $.etudriver.selection.cumulativeDwell)
@@ -753,6 +782,44 @@ $.etudriver.getKeyboard = function (name) {
     return keyboards[name];
 }
 
+// Starts calibration verification routine
+// arguments:
+//  - settings:
+//      see settings.calibVerifier for description
+//  - callback:
+//      - started: is call before the first target is displayed
+//          - target = {
+//              location: {x, y},   : the normalized (0..1) target location on screen
+//              cell: {row, col}}   : the cell in whose center the target is displayed
+//      - pointStarted: is call for every target when it appears. arguments:
+//          - target = {
+//              location: {x, y},   : the normalized (0..1) target location on screen
+//              cell: {row, col}}   : the cell in whose center the target is displayed
+//      - pointFinished: is call for every target after data collection is finished. arguments:
+//          - finished = {          : the target just finished
+//              location: {x, y},   : the normalized (0..1) target location on screen
+//              cell: {row, col},   : cell indexes (>= 0)
+//              samples: []}        : samples collected
+//          - next = {              : next target to appear, or null if the finished target was the last
+//              location: {x, y},   : the normalized (0..1) target location on screen
+//              cell: {row, col}}   : the cell in whose center the target is displayed
+//      - finished: the verification is finished. arguments:
+//          - result = {
+//              targets: [{              : the array of means of the offset, its angle and STD for each target,
+//                  amplitude, angle, std,      elements also contains the target's cell and 
+//                  location, cell}],           the displayed location in PIXELS
+//              amplitude: {mean, std},  : mean and deviation of the offsets
+//              angle: {mean, std},      : mean and deviation of the offset angles (radians)
+//              std: {mean, std},        : mean and deviation of the deviations of offsets
+//              apx: {h: [], v: []},     : arrays of "a" for horizontal and vertical approximation by a0 + a1*x + a2*x^2
+//              interpretation: {        : interpretation of the calibration verification:
+//                  text: [s, f],        : 2 strings with the (s)uccessful and (f)ailed interpretation results, 
+//                  rating}              : and the calibration rating
+//            }
+$.etudriver.verifyCalibration  = function (customSettings, customCallbacks) {
+    calibVerifier.run(customSettings, customCallbacks);
+}
+
 
 // Internal
 
@@ -784,15 +851,17 @@ var stateLabel = {
     connected: 'CONNECTED'
 };
 
+// variable to store in browser's storage
 var storage = {
-    device: 'etudriver-device'
+    device: {
+        id: 'etudriver-device',
+        default: 'Mouse'
+    }
 };
 
 // privat members
 var targets = [];
 
-var zoom = {x: 1.0, y: 1.0};
-var offset = {x: 0, y: 0};
 var keyboardMarkers = {
     button: 'etud-keyboard-keyMarker',
     indicator: 'etud-keyboard-indicator'
@@ -822,6 +891,7 @@ var btnStartStop = null;
 var lblLog = null;
 
 // other objects
+var fixdet = null;
 var pointer = null;
 var progress = null;
 var headCorrector = null;
@@ -831,12 +901,12 @@ var chgDetectors = {};
 var keyboards = {};
 var currentKeyboard = null;
 var scroller = null;
+var calibVerifier = null;
 
 var path = '';
 
 // WebSocket
 var websocket = null;
-var deviceName = 'Mouse';
 
 var onWebSocketOpen = function (evt) {
     //debug('onWebSocketOpen', evt);
@@ -846,12 +916,9 @@ var onWebSocketOpen = function (evt) {
         var state = updateState(stateFlags.none);
         updateControlPanel(state);
         
-        if (storageAccessible()) {
-            deviceName = localStorage[storage.device] || deviceName;
-        }
-        
-        if (deviceName) {
-            sendToWebSocket(request.setDevice + ' ' + deviceName);
+        var device = getStoreValue(storage.device);
+        if (device) {
+            sendToWebSocket(request.setDevice + ' ' + device);
         }
     }
 };
@@ -885,10 +952,7 @@ var onWebSocketMessage = function (evt) {
             onstate(state);
         } else if (ge.type === respondType.device) {
             debug('onWebSocketMessage', 'WebSocket got device: ' + evt.data);
-            deviceName = ge.name;
-            if (storageAccessible()) {
-                localStorage[storage.device] = deviceName;
-            }
+            store(storage.device, ge.name);
             state = updateState(undefined, ge.name);
             onstate(state);
         }
@@ -968,7 +1032,7 @@ var onstate = function (state) {
 
         $.etudriver.updateTargets();
 
-        FixationDetector.reset();
+        fixdet.reset();
         for (key in chgDetectors) {
             chgd = chgDetectors[key];
             chgd.init(chgd.modes.detection);
@@ -1004,6 +1068,11 @@ var onstate = function (state) {
 
 var ondata = function (ts, x, y, pupil, ec) {
     var point = screenToClient(x, y);
+    
+    if (calibVerifier.isActive()) { // feed unprocessed gaze points to calibration verifier
+        calibVerifier.feed(ts, x, y);
+    }
+    
     if (bool(settings.headCorrector.enabled) && ec) {
         if (!lastSample) {
             headCorrector.init(ec);
@@ -1015,7 +1084,7 @@ var ondata = function (ts, x, y, pupil, ec) {
         callbacks.sample(ts, point.x, point.y, pupil, ec);
     }
 
-    if (controlPanel && settings.panel.displaySamples) {
+    if (controlPanel && bool(settings.panel.displaySamples)) {
         var formatValue = function (value, size) {
             var result = value + ',';
             while (result.length < size) {
@@ -1040,7 +1109,7 @@ var ondata = function (ts, x, y, pupil, ec) {
         lblLog.innerHTML = log;
     }
 
-    FixationDetector.feed(ts, point.x, point.y);
+    fixdet.feed(ts, point.x, point.y);
     
     map(settings.mapping.type, point.x, point.y);
     if (ec) {
@@ -1077,9 +1146,9 @@ var ondata = function (ts, x, y, pupil, ec) {
             pt.x = point.x; 
             pt.y = point.y;
         } else if (settings.mapping.source == $.etudriver.source.fixations) {
-            if (FixationDetector.currentFix) {
-                pt.x = FixationDetector.currentFix.x; 
-                pt.y = FixationDetector.currentFix.y;
+            if (fixdet.currentFix) {
+                pt.x = fixdet.currentFix.x; 
+                pt.y = fixdet.currentFix.y;
             }
         }
         if (smoother) {
@@ -1113,9 +1182,9 @@ var map = function (type, x, y) {
     var source = $.etudriver.source;
     var mapped = null;
 
-    if (settings.mapping.source == source.fixations && FixationDetector.currentFix) {
-        x = FixationDetector.currentFix.x;
-        y = FixationDetector.currentFix.y;
+    if (settings.mapping.source == source.fixations && fixdet.currentFix) {
+        x = fixdet.currentFix.x;
+        y = fixdet.currentFix.y;
     }
     
     switch (type) {
@@ -1236,7 +1305,7 @@ var checkIfSelected = function (ts, x, y, pupil, ec) {
             }
             break;
         case choices.simpleDwell:
-            if (FixationDetector.currentFix && lastSample) {
+            if (fixdet.currentFix && lastSample) {
                 if (selectSimpleDwell(target, ts - lastSample.ts)) {
                     result = target;
                 }
@@ -1402,69 +1471,6 @@ var updateState = function (flags, device) {
         isBusy:       (currentStateFlags & stateFlags.busy) > 0,
         isStopped:    isStopped,
         device:       currentDevice
-    };
-};
-
-var updatePixelConverter = function () {
-
-    if (window.mozInnerScreenX !== undefined) {    // Firefox
-
-        var zoomLevel = (function (precision) {
-            var cycles = 0;
-            var searchZoomLevel = function (level, min, divisor) {
-                var wmq = window.matchMedia;
-                while (level >= min && !wmq('(min-resolution: ' + (level / divisor) + 'dppx)').matches) {
-                    level -= 1;
-                    cycles += 1;
-                }
-                return level;
-            };
-
-            var maxSearchLevel = 5.0;
-            var minSearchLevel = 0.1;
-            var divisor = 1;
-            var result;
-            var i;
-            for (i = 0; i < precision; i += 1) {
-                result = 10 * searchZoomLevel(maxSearchLevel, minSearchLevel, divisor);
-                maxSearchLevel = result + 9;
-                minSearchLevel = result;
-                divisor *= 10;
-            }
-
-            //debug('updatePixelConverter', 'zoom = ' + (result / divisor) + ', calculated in ' + cycles + ' cycles');
-            return result / divisor;
-        })(5);
-
-        zoom = {
-            x: zoomLevel,
-            y: zoomLevel
-        };
-
-        offset = {
-            x: window.mozInnerScreenX * zoomLevel,
-            y: window.mozInnerScreenY * zoomLevel
-        };
-    } else {    // Chrome
-        zoom = {
-            x: devicePixelRatio,
-            y: devicePixelRatio
-        };
-
-        var innerWidth = window.innerWidth * zoom.x;
-        var innerHeight = window.innerHeight * zoom.y;
-
-        offset = {
-            x: window.screenX + (window.outerWidth - innerWidth) / 2,
-            y: window.screenY + (window.outerHeight - innerHeight) - (window.outerWidth - innerWidth) / 2
-        };
-    }
-};
-
-var screenToClient = function (x, y) {
-    return {
-        x: (x - offset.x) / zoom.x,
-        y: (y - offset.y) / zoom.y
     };
 };
 

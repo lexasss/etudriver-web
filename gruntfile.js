@@ -10,6 +10,7 @@ module.exports = function(grunt) {
                     'js/_start.js',
                     'js/main.js',
                     'js/utils.js',
+                    'js/fullscreen.js',
                     'js/fixdet.js',
                     'js/headcorr.js',
                     'js/smoother.js',
@@ -17,34 +18,14 @@ module.exports = function(grunt) {
                     'js/chgdet.js',
                     'js/keyboard.js',
                     'js/scroller.js',
+                    'js/calibverifier.js',
                     'js/_end.js'
                 ],
-                dest: '<%= pkg.name %>-<%= pkg.version %>.js'
+                dest: '<%= pkg.name %>.js'
             },
             css: {
                 src: 'css/**/*.css',
-                dest: '<%= pkg.name %>-<%= pkg.version %>.css'
-            },
-            testJS: {
-                src: [
-                    'js/_start.js',
-                    'js/main.js',
-                    'js/utils.js',
-                    'js/fixdet.js',
-                    'js/headcorr.js',
-                    'js/smoother.js',
-                    'js/hgdet.js',
-                    'js/chgdet.js',
-                    'js/keyboard.js',
-                    'js/scroller.js',
-                    'tests/tests.js',
-                    'js/_end.js'
-                ],
-                dest: 'test/<%= pkg.name %>.js'
-            },
-            testCSS: {
-                src: 'css/**/*.css',
-                dest: 'test/<%= pkg.name %>.css'
+                dest: '<%= pkg.name %>.css'
             }
         },
         
@@ -53,7 +34,7 @@ module.exports = function(grunt) {
                 browsers: ['last 3 versions', 'ff > 12']
             },
             no_dest: {
-                src: ['<%= pkg.name %>-<%= pkg.version %>.css', 'test/<%= pkg.name %>.css', 'examples/*.css']
+                src: ['<%= pkg.name %>.css', 'examples/*.css']
             }
         },
     
@@ -63,7 +44,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    '<%= pkg.name %>-<%= pkg.version %>.min.js': ['<%= concat.js.dest %>']
+                    '<%= pkg.name %>.min.js': ['<%= concat.js.dest %>']
                 }
             }
         },
@@ -71,21 +52,21 @@ module.exports = function(grunt) {
         csso: {
             dist: {
                 files: {
-                    '<%= pkg.name %>-<%= pkg.version %>.min.css': ['<%= pkg.name %>-<%= pkg.version %>.css']
+                    '<%= pkg.name %>.min.css': ['<%= concat.css.dest %>']
                 }
             }
         },
         
-        /*
         copy: {
-            imagesToExamples: {
-                expand: true,
-                cwd: 'images/',
-                src: '** /*.png',
-                dest: 'examples/images/'
+            versionize: {
+                files: [
+                    { src: '<%= concat.js.dest %>', dest: '<%= pkg.name %>-<%= pkg.version %>.js' },
+                    { src: '<%= concat.css.dest %>', dest: '<%= pkg.name %>-<%= pkg.version %>.css' },
+                    { src: '<%= pkg.name %>.min.js', dest: '<%= pkg.name %>-<%= pkg.version %>.min.js' },
+                    { src: '<%= pkg.name %>.min.css', dest: '<%= pkg.name %>-<%= pkg.version %>.min.css' }
+                ]
             }
         },
-        */
         
         /*
         less: {
@@ -118,13 +99,14 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-autoprefixer');
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    //grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-csslint');
     grunt.loadNpmTasks('grunt-csso');
 
     //grunt.registerTask('less', ['less']);
+    grunt.registerTask('ver', ['copy:versionize']);
     grunt.registerTask('inspect', ['jshint', 'csslint']);
     grunt.registerTask('default', ['concat', 'autoprefixer', 'uglify', 'csso']);
 };
