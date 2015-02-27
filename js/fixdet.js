@@ -96,4 +96,4 @@ function FixationDetector(settings) {
         this.currentFix = null;
         candidateFix = null;
     };
-};
+}

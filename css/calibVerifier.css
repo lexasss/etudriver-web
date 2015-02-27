@@ -43,7 +43,7 @@
 
 .etud-calibVerifier-rating {
     position: absolute;
-    top: 0px;
+    top: 0;
     width: 100%;
     font: 20pt/48px Arial, sans-serif;
     color: #444;
