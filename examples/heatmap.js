@@ -81,7 +81,7 @@ $(function (){
                 }
                 loadNewImage(images[1 - imgIdx])
             } else if (state.isTracking) {
-                heatmap.clear();
+                //heatmap.clear();
                 if (!debug)  {
                     canvas.addClass('hidden');
                     controls.addClass('hidden');

@@ -1000,7 +1000,7 @@ var onWebSocketOpen = function (evt) {
         var state = updateState(stateFlags.none);
         updateControlPanel(state);
         
-        var device = getStoreValue(storage.device);
+        var device = getStoredValue(storage.device);
         if (device) {
             sendToWebSocket(request.setDevice + ' ' + device);
         }
@@ -2164,7 +2164,7 @@ function FixationDetector(settings) {
         this.currentFix = null;
         candidateFix = null;
     };
-};
+}
 
 // Head corrector
 
