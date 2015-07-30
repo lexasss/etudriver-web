@@ -1,14 +1,14 @@
 /* CSS animation, from animate.css, https://daneden.me/animate/ */
-.etud-animated {
+.gt-animated {
   animation-duration: 500ms;
   animation-fill-mode: both;
 }
 
-.etud-animated-fadeInUp {
-    animation-name: etud-fadeInUp;
+.gt-animated-fadeInUp {
+    animation-name: gt-fadeInUp;
 }
 
-@keyframes etud-fadeInUp {
+@keyframes gt-fadeInUp {
     0% { 
         opacity: 0;
         transform: translateY(20px);
@@ -19,11 +19,11 @@
     }
 }
 
-.etud-animated-fadeOutDown {
-    animation-name: etud-fadeOutDown;
+.gt-animated-fadeOutDown {
+    animation-name: gt-fadeOutDown;
 }
 
-@keyframes etud-fadeOutDown {
+@keyframes gt-fadeOutDown {
     0% { 
         opacity: 1;
         transform: translateY(0);
@@ -34,11 +34,11 @@
     }
 }
 
-.etud-animated-fadeInHalf {
-    animation-name: etud-fadeInHalf;
+.gt-animated-fadeInHalf {
+    animation-name: gt-fadeInHalf;
 }
 
-@keyframes etud-fadeInHalf {
+@keyframes gt-fadeInHalf {
     0% { 
         opacity: 0.4;
     }
@@ -47,11 +47,11 @@
     }
 }
 
-.etud-animated-fadeOutHalf {
-    animation-name: etud-fadeOutHalf;
+.gt-animated-fadeOutHalf {
+    animation-name: gt-fadeOutHalf;
 }
 
-@keyframes etud-fadeOutHalf {
+@keyframes gt-fadeOutHalf {
     0% { 
         opacity: 1;
     }

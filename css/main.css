@@ -1,43 +1,10 @@
-#etud-panel {
-	background-color: #CCCCCC;
-	border-bottom: 2px solid #BBBBBB;
-	box-shadow: 0 3px 5px #DDDDDD;
-	left: 0;
-	position: fixed;
-	right: 0;
-	top: 0;
-	z-index: 2147483647;
-}
-
-.etud-panel-connected {
-    background-color: #C7D4DB; 
-	background-image: linear-gradient(bottom, #C7D4DB, #D9E7EF);
-}
-
-#etud-device {
-	color: #600000;
-	font: bold 12pt Arial, sans-serif;
-	padding: 0 20px;
-	text-shadow: 1px 1px #DDDDDD;
-    vertical-align: middle;
-}
-
-#etud-log {
-	color: #333333;
-	font: bold 11pt Console, Courier, monospace;
-	padding: 0 20px;
-	text-shadow: 2px 2px #FFFFFF;
-    vertical-align: middle;
-	white-space: pre;
-}
-
-.etud-pointer {
+.gt-pointer {
     pointer-events: none;
     position: fixed;
     z-index: 2147483647;
 }
 
-.etud-progress {
+.gt-progress {
     pointer-events: none;
     position: fixed;
     z-index: 2147483646;

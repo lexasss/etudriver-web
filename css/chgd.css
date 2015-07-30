@@ -1,4 +1,4 @@
-#etud-chgd-calibOverlay {
+#gt-chgd-calibOverlay {
     background-color: black;
     background-color: rgba(0,0,0,.7);
     display: none;
@@ -10,7 +10,7 @@
     width: 100%;
 }
 
-#etud-chgd-calibOverlay:after {
+#gt-chgd-calibOverlay:after {
     content: '';
     display: inline-block;
     height: 100%;
@@ -18,7 +18,7 @@
     width: 0;
 }
 
-#etud-chgd-calib {
+#gt-chgd-calib {
     background: #fff;
     border: 5px solid #fff;
     border-radius: 15px;
@@ -30,7 +30,7 @@
     vertical-align: middle;
 }
 
-#etud-chgd-calibClose {
+#gt-chgd-calibClose {
     background: #fff;
     border: 5px solid #fff;
     border-radius: 50%;
@@ -51,15 +51,15 @@
     width: 12px;
 }
 
-#etud-chgd-calibClose:hover {
+#gt-chgd-calibClose:hover {
     background: #ddd;
 }
 
-#etud-chgd-calibMenu {
+#gt-chgd-calibMenu {
     display: none;
 }
 
-#etud-chgd-calibMenu ul {
+#gt-chgd-calibMenu ul {
     background-color: #666666;
     background-image: linear-gradient(bottom, #666666, #7d7d7d);
     border-radius: 5px;
@@ -70,13 +70,13 @@
     margin: 0;
 }
 
-#etud-chgd-calibMenu li {
+#gt-chgd-calibMenu li {
     list-style: none;
     padding: 0 2px;
     position: relative;
 }
 
-#etud-chgd-calibMenu a {
+#gt-chgd-calibMenu a {
     border-radius: 5px;
     color: #e7e5e5;
     cursor: pointer;
@@ -89,13 +89,13 @@
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
-#etud-chgd-calibMenu a:hover {
+#gt-chgd-calibMenu a:hover {
     background: #000;
     color: #fff;
 }
 
-#etud-chgd-calibMenu li:hover > a,
-#etud-chgd-calibMenu li:hover > input {
+#gt-chgd-calibMenu li:hover > a,
+#gt-chgd-calibMenu li:hover > input {
     background-color: #C6C6C6;
     background-image: linear-gradient(bottom, #C6C6C6, #DDDDDD);
     color: #444;
@@ -103,11 +103,11 @@
     text-shadow: 0 1px 0 #ffffff;
 }
 
-#etud-chgd-calibMenu li:hover > ul {
+#gt-chgd-calibMenu li:hover > ul {
     display: block;
 }
 
-#etud-chgd-calibMenu ul ul {
+#gt-chgd-calibMenu ul ul {
     background-color: #C6C6C6;
     background-image: linear-gradient(bottom, #C6C6C6, #DDDDDD);
     border: solid 1px #b4b4b4;
@@ -122,7 +122,7 @@
     width: auto;
 }
 
-#etud-chgd-calibMenu input {
+#gt-chgd-calibMenu input {
     border-radius: 5px;
     color: #e7e5e5;
     display: inline-block;
@@ -132,7 +132,7 @@
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
-#etud-chgd-calibMenu input:hover {
+#gt-chgd-calibMenu input:hover {
     background-color: #666666 !important;
     background-image: linear-gradient(bottom, #666666, #7d7d7d) !important;
     border-radius: 5px;
@@ -140,7 +140,7 @@
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
-#etud-chgd-calibMenu li:hover li input {
+#gt-chgd-calibMenu li:hover li input {
     background: none;
     border: none;
     box-shadow: none;

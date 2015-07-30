@@ -1,20 +1,20 @@
-.etud-scroller {
+.gt-scroller {
     box-shadow: 0 0 5px grey;
     position: fixed;
     width: 100%;
 }
 
-.etud-scroller-upper {
+.gt-scroller-upper {
     background-image: linear-gradient(bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2));
     top: 0;
 }
 
-.etud-scroller-lower {
+.gt-scroller-lower {
     background-image: linear-gradient(bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
     bottom: -25;
 }
 
-.etud-scroller-key {
+.gt-scroller-key {
     background-position: center;
     background-repeat: no-repeat;
     margin: 0;
@@ -22,28 +22,27 @@
     opacity: 0.4;
 }
 
-.etud-scroller-keyOpaque {
+.gt-scroller-keyOpaque {
     opacity: 1;
 }
 
-.etud-scroller tr {
+.gt-scroller tr {
     margin: 0;
     padding: 0;
 }
 
-.etud-scroller td {
+.gt-scroller td {
     padding: 5px;
     height: 90px;
     text-align: center;
 }
 
-.etud-scroller td > div{
-    padding: 0;
+.gt-scroller td > div{
     padding: 0;
     height: 100%;
 }
 
-.etud-scroller td > div:after{
+.gt-scroller td > div:after{
     content: '';
     display: inline-block;
     height: 100%;

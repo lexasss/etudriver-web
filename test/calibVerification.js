@@ -22,9 +22,9 @@ var test = function (modulation) {
             size: 20                // size of "aura", px
         },
         className: {
-            container: 'etud-calibVerifier-containerDefault',
-            target: 'etud-calibVerifier-targetDefault',
-            pulsator: 'etud-calibVerifier-pulsatorDefault'
+            container: 'gt-calibVerifier-containerDefault',
+            target: 'gt-calibVerifier-targetDefault',
+            pulsator: 'gt-calibVerifier-pulsatorDefault'
         },
         resultColors: {                // colors of the object painted in the resulting view
             target: '#444',

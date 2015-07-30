@@ -1,11 +1,10 @@
 /*!
- *  ETU-Driver for web pages and applications
+ *  GazeTargets: gaze for web pages and applications
  *  
- *  @version    0.1.1
+ *  @version    1.0.0
  *  @license    GNU Lesser General Public License v3, http://www.gnu.org/copyleft/lesser.html
  *  @author     Oleg Spakov, University of Tampere
  *  @created    01.11.2013
- *  @updated    20.11.2013
  *  @link       http://wwww.sis.uta.fi/~csolsp/projects.html
  *  @decsription    To create gaze-responsive interaction with a web-page objects.
  *                  Uses WebSocket to communicate with "ETU-Driver test" application which acts as a gaze data server.
@@ -20,14 +19,14 @@
  *      document.addEventListener("DOMContentLoaded", function() {
  *      
  *          // Optionally, define some common settings in $.etudriver.settings, for example:
- *          $.etudriver.settings.selection.className = 'selected';
+ *          GazeTargets.selection.settings.className = 'selected';
  *          
  *          // Init the library, with some settings and callbacks.
  *          //   For other majority of settings, look below for the definition of 'settings' variable 
  *          //   to learn about the available settings to customize and their default values
  *          // Note that the second argument accepts a callback as "function(event, target)" that is
  *          //   called on gaze enter and leave, and on target selection
- *          $.etudriver.init({
+ *          GazeTargets.init({
  *              panel: {
  *                  show: true
  *              },
@@ -35,13 +34,13 @@
  *                  {
  *                      className: 'gazeObj',
  *                      selection: {
- *                          type: $.etudriver.selection.competitiveDwell
+ *                          type: GazeTargets.selection.types.competitiveDwell
  *                      }
  *                  },
  *                  {
  *                      className: 'gazeObj2',
  *                      selection: {
- *                          type: $.etudriver.selection.simpleDwell,
+ *                          type: GazeTargets.selection.types.simpleDwell,
  *                          className: 'selected2',
  *                          dwellTime: 1500
  *                      },
@@ -51,14 +50,14 @@
  *                  }
  *              ],
  *              mapping: {
- *                  type: $.etudriver.mapping.expanded,
- *                  source: $.etudriver.source.fixations,
+ *                  type: GazeTargets.mapping.types.expanded,
+ *                  source: GazeTargets.mapping.sources.fixations,
  *              },
  *              pointer: {
  *                  show: true
  *              }
- *          }, {
- *              
+ *          }, 
+ *          {
  *              state: function (state) {
  *                  if (state.isStopped)
  *                      console.log('tracking stopped');
@@ -72,12 +71,9 @@
  *          
  *          // Set handlers for the gaze events on individual elements 
  *          //   (see $.etudriver.event for the list of events)
- *          $('#gazeButton').on($.etudriver.event.selected, function () {
- *              // the element with id 'gazeButton' has been selected
+ *          $('#gazeButton').on(GazeTargets.events.selected, function () {
+ *              console.log('the element with id "gazeButton" has been selected');
  *          });
  *      });
  *
 */
-
-(function ($) {
-    'use strict';

@@ -6,21 +6,7 @@ module.exports = function(grunt) {
         
         concat: {
             js: {
-                src: [
-                    'js/_start.js',
-                    'js/main.js',
-                    'js/utils.js',
-                    'js/fullscreen.js',
-                    'js/fixdet.js',
-                    'js/headcorr.js',
-                    'js/smoother.js',
-                    'js/hgdet.js',
-                    'js/chgdet.js',
-                    'js/keyboard.js',
-                    'js/scroller.js',
-                    'js/calibverifier.js',
-                    'js/_end.js'
-                ],
+                src: 'js/*.js',
                 dest: '<%= pkg.name %>.js'
             },
             css: {
