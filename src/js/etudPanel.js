@@ -29,6 +29,17 @@
             }
         },
 
+        showMessage: function (text, timeout) {
+            if (lblLog) {
+                lblLog.innerHTML = text;
+                if (timeout) {
+                    setTimeout(function () {
+                        lblLog.innerHTML = '';
+                    }, timeout);
+                }
+            }
+        },
+
         setIsConnected: function (isConnected) {
             if (!controlPanel) {
                 return;
@@ -72,11 +83,18 @@
                 return result;
             };
             
-            var point = ropot.GazeTargets.Utils.screenToClient(event.x, event.y);
-            var log = 't = ' + formatValue(event.ts, 6) +
-                ' x = ' + formatValue(point.x, 5) +
-                ' y = ' + formatValue(point.y, 5) +
-                ' p = ' + formatValue(event.pupil, 4);
+            var log = '';
+            if (event.ts !== undefined) {
+                log += ' t = ' + formatValue(event.ts, 6);
+            }
+            if (event.x !== undefined && event.y !== undefined) {
+                var point = root.GazeTargets.Utils.screenToClient(event.x, event.y);
+                log += ' x = ' + formatValue(point.x, 5) +
+                       ' y = ' + formatValue(point.y, 5);
+            }
+            if (event.pupil !== undefined) {
+                log += ' p = ' + formatValue(event.pupil, 4);
+            }
 
             if (event.ec !== undefined) {
                 log += 'ec: { ';

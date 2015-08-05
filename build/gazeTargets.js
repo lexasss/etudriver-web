@@ -1665,6 +1665,7 @@
     }
 
     root.GazeTargets.CustomHeadGestureCalibrator = CustomHeadGestureCalibrator;
+    root.GazeTargets.CustomHeadGestureDetector = CustomHeadGestureDetector;
 
 })(window);
 // Create a panel with buttons to issue ETUdriver commands
@@ -1695,6 +1696,17 @@
         setLabel: function (label) {
             if (lblDevice) {
                 lblDevice.innerHTML = label;
+            }
+        },
+
+        showMessage: function (text, timeout) {
+            if (lblLog) {
+                lblLog.innerHTML = text;
+                if (timeout) {
+                    setTimeout(function () {
+                        lblLog.innerHTML = '';
+                    }, timeout);
+                }
             }
         },
 
@@ -1741,11 +1753,18 @@
                 return result;
             };
             
-            var point = ropot.GazeTargets.Utils.screenToClient(event.x, event.y);
-            var log = 't = ' + formatValue(event.ts, 6) +
-                ' x = ' + formatValue(point.x, 5) +
-                ' y = ' + formatValue(point.y, 5) +
-                ' p = ' + formatValue(event.pupil, 4);
+            var log = '';
+            if (event.ts !== undefined) {
+                log += ' t = ' + formatValue(event.ts, 6);
+            }
+            if (event.x !== undefined && event.y !== undefined) {
+                var point = root.GazeTargets.Utils.screenToClient(event.x, event.y);
+                log += ' x = ' + formatValue(point.x, 5) +
+                       ' y = ' + formatValue(point.y, 5);
+            }
+            if (event.pupil !== undefined) {
+                log += ' p = ' + formatValue(event.pupil, 4);
+            }
 
             if (event.ec !== undefined) {
                 log += 'ec: { ';
@@ -2024,12 +2043,7 @@
 
     var onWebSocketError = function (evt) {
         utils.debug('onWebSocketError', evt);
-        if (lblLog) {
-            lblLog.innerHTML = 'Problems in the connection to WebSocket server';
-            setTimeout(function () {
-                lblLog.innerHTML = '';
-            }, 5000);
-        }
+        panel.showMessage('Problems in the connection to WebSocket server', 5000);
     };
 
     var getState = function (flags, device) {
@@ -3365,6 +3379,7 @@
 //      pointer.js
 //      mapper.js
 //      selector.js
+//      targets.js
 // Depended style sheets:
 //      chgd.css
 //      etudPanel.css
@@ -3657,9 +3672,9 @@
 
     // Settings with defaults values
     var settings = {
-        etudPanel: {            // default control panel settings with eye-tracking control buttons
-            show: true,               // boolean flag
-            displaySamples: false,    // flag to display sample data, if panel is visible
+        etudPanel: {                // default control panel settings with eye-tracking control buttons
+            show: true,             // boolean flag
+            displaySamples: false,  // flag to display sample data, if panel is visible
             id: 'gt-etudpanel',     // the panel id
             connectedClassName: 'gt-etudpanel-connected'  // the class to apply then WebSocket is connected
         },
@@ -3670,24 +3685,24 @@
         targets: [          // list of target definitions
             {
                 selector: '.gt-target',   // elements with this class name will be used 
-                                            //   in gaze-to-element mapping procedure
-                keyboard: null,             // keyboard to shown on selection, 'name' from GazeTargets.keyboard
-                selection: {                // target selection settings that what happens on selection; accepts:
-                                            //  - 'type', see GazeTargets.selection.types
-                                            //  - the keys from GazeTargets.selection.settings.defaults
-                                            //  - the keys from GazeTargets.selection.settings.[TYPE] 
-                                            //    (see comments to the corresponding type in GazeTargets.selection)
+                                          //   in gaze-to-element mapping procedure
+                keyboard: null,           // keyboard to shown on selection, 'name' from GazeTargets.keyboard
+                selection: {              // target selection settings that what happens on selection; accepts:
+                                          //  - 'type', see GazeTargets.selection.types
+                                          //  - the keys from GazeTargets.selection.settings.defaults
+                                          //  - the keys from GazeTargets.selection.settings.[TYPE] 
+                                          //    (see comments to the corresponding type in GazeTargets.selection)
                     type: GazeTargets.selection.types.cumulativeDwell   // the default selection type
                 },
-                mapping: {                  // specifies what happens when a target gets attention; accepts:
-                                            //  - the keys from GazeTargets.mapping.settings.defaults
+                mapping: {                // specifies what happens when a target gets attention; accepts:
+                                          //  - the keys from GazeTargets.mapping.settings.defaults
                 }
             }
         ],
         mapping: {          // mapping setting for all targets; accepts:
-                                                //  - 'type' and 'sources', see below
-                                                //  - the keys from GazeTargets.mapping.settings.[TYPE]
-                                                //    (see comments to the corresponding type in GazeTargets.mapping)
+                            //  - 'type' and 'sources', see below
+                            //  - the keys from GazeTargets.mapping.settings.[TYPE]
+                            //    (see comments to the corresponding type in GazeTargets.mapping)
             type: GazeTargets.mapping.types.naive,    // mapping type, see GazeTargets.mapping
             source: GazeTargets.mapping.sources.samples, // data source for mapping, see GazeTargets.source
         },
@@ -3712,7 +3727,7 @@
             delay: 200      // >0ms, if the progress is not shown immediately after gaze enters a target
         },
         fixdet: {
-            maxFixSize: 50,        // pixels
+            maxFixSize: 50,     // pixels
             bufferLength: 10    // samples
         },
         headCorrector: {    // gaze point correction my head movements
@@ -3723,7 +3738,7 @@
             timeWindow: 800
         },
         customHeadGestureDetector: {
-            calibration: {          // gesture calibration settings
+            calibration: {             // gesture calibration settings
                 trials: 5,             // number of trials
                 threshold: 0.0120,     // minimum signal from the baseline
                 trialDuration: 2000,   // ms
@@ -3749,11 +3764,11 @@
             enabled: false,         // enabled/disabled
             targets: {},            // to be filled dynamically
             speeds: [2, 7, 15, -1], // definition of cells: 
-                // >0: speed per step in pixels,
-                // 0: no scrolling,
-                // -1: scrolling by page
+                                    //    >0: speed per step in pixels,
+                                    //    0: no scrolling,
+                                    //    -1: scrolling by page
             controller: GazeTargets.scroller.controllers.headPose,    // the scrolling controller
-            className: 'gt-scroller', // class name
+            className: 'gt-scroller',   // class name
             imageFolder: 'images/scroller/', // location of images
             size: 80,                   // height in pixels
             delay: 800,                 // ms
@@ -3821,9 +3836,19 @@
         
         // Fires on a keyboard visibility change
         // arguments:
-        //  - keyboard: the keyboard
-        //  - visible: the visibility flag
+        //   keyboard - the keyboard
+        //   visible - the visibility flag
         keyboard: null
+    };
+
+    // variable to store in browser's storage
+    var storage = {
+        etudriver: {
+            device: {
+                id: 'gt-etud-device',
+                default: 'Mouse'
+            }
+        }
     };
 
     // Initialization.
@@ -3871,43 +3896,14 @@
     //  - mapping: type of mapping method (from GazeTraker.mapping.types)
     //  - keyboard: null, or the keyboard that is available currently for the input into this element
     GazeTargets.updateTargets = function () {
-        targets = [];
-        var ts, elems, i;
-        var updateElement = function (elem, settings) {
-            elem.gaze = {
-                focused: false,
-                selected: false,
-                attention: 0,
-                selection: settings.selection,
-                mapping: settings.mapping,
-                keyboard: settings.keyboard ? keyboards[settings.keyboard] : null
-            };
-            targets.push(elem);
-        };
-        
-        for (var idx in settings.targets) {
-            ts = settings.targets[idx];
-            elems = document.querySelectorAll(ts.selector);
-            for (i = 0; i < elems.length; i += 1) {
-                updateElement(elems[i], ts);
-            }
-        }
-        
+        var keyboardTargets = null;
         if (currentKeyboard) {
-            ts = currentKeyboard.options;
-            elems = currentKeyboard.getDOM().querySelectorAll('.' + keyboardMarkers.button);
-            for (i = 0; i < elems.length; i += 1) {
-                updateElement(elems[i], ts);
-            }
+            keyboardTargets = {
+                keyboard: currentKeyboard,
+                selector: '.' + keyboardMarkers.button
+            };
         }
-        
-        for (var target in settings.scroller.targets) {
-            ts = settings.scroller.targets[target];
-            elems = document.querySelectorAll(ts.selector);
-            for (i = 0; i < elems.length; i += 1) {
-                updateElement(elems[i], ts);
-            }
-        }
+        targets.update(keyboardTargets, settings.scroller.targets);
     };
 
     // Triggers calibration of a custom head gesture detector
@@ -3929,7 +3925,7 @@
         return true;
     };
 
-    // Returns the keyboard of the given name
+    // Returns the keyboard object
     GazeTargets.getKeyboard = function (name) {
         return keyboards[name];
     };
@@ -3968,29 +3964,17 @@
     //                  text: [s, f],        : 2 strings with the (s)uccessful and (f)ailed interpretation results, 
     //                  rating}              : and the calibration rating
     //            }
-    GazeTargets.verifyCalibration  = function (customSettings, customCallbacks) {
+    GazeTargets.verifyCalibration = function (customSettings, customCallbacks) {
         calibVerifier.run(customSettings, customCallbacks);
     };
 
 
     // Internal
 
-    // variable to store in browser's storage
-    var storage = {
-        etudriver: {
-            device: {
-                id: 'gt-etud-device',
-                default: 'Mouse'
-            }
-        }
-    };
-
     // shortcuts
     var utils;
 
     // privat members
-    var targets = [];
-
     var keyboardMarkers = {
         button: 'gt-keyboard-keyMarker',
         indicator: 'gt-keyboard-indicator'
@@ -4000,6 +3984,7 @@
     var lastSample = null;
 
     // other objects
+    var targets = null;
     var fixdet = null;
     var progress = null;
     var headCorrector = null;
@@ -4016,64 +4001,6 @@
 
     var homePath = '';
 
-
-    // Gaze-tracking events
-    var onDataReceived = function (ts, x, y, pupil, ec) {
-        var point = utils.screenToClient(x, y);
-        
-        // Feed unprocessed gaze points to calibration verifier
-        if (calibVerifier.isActive()) {
-            calibVerifier.feed(ts, x, y);
-        }
-        
-        // Now make gaze point correction before feeding to any consumer
-        if (headCorrector && ec) {
-            if (!lastSample) {
-                headCorrector.init(ec);
-            }
-            point = headCorrector.correct(point, ec);
-        }
-
-        // Next, update the fixation point
-        fixdet.feed(ts, point.x, point.y);
-        
-        // External script should receive the sample before a possible selection happens
-        if (typeof callbacks.sample === 'function') {
-            callbacks.sample(ts, point.x, point.y, pupil, ec);
-        }
-
-        // Find the focused target
-        var useFix = settings.mapping.source == GazeTargets.mapping.sources.fixations && fixdet.currentFix;
-        var mappingX = useFix ? fixdet.currentFix.x : point.x,
-            mappingY = useFix ? fixdet.currentFix.y : point.y;
-        
-        var mappingResult = mapper.feed(targets, mappingX, mappingY);
-        if (progress && mappingResult.isNewFocused) {
-            progress.moveTo(mappingResult.focused);
-        }
-
-        // Detect selection
-        if (ec) {
-            utilizeEyeCameraPoints(mappingResult.focused, ts, point, pupil, ec);
-        }
-        
-        selector.feed(targets, mappingResult.focused, lastSample ? ts - lastSample.ts : 0);
-        
-        // Finally, update dwell-time progress and gaze pointer
-        if (mappingResult.lastFocused && progress) {
-            progress.update(utils.bool(mappingResult.lastFocused.gaze.selection.showProgress) ? mappingResult.lastFocused : null);
-        }
-        
-        updatePointer(ts, point);
-        
-        lastSample = {
-            ts: ts,
-            x: x,
-            y: y,
-            pupil: pupil,
-            ec: ec
-        };
-    };
 
     var onStateChanged = function (state) {
         if (utils.bool(settings.pointer.show)) {
@@ -4114,14 +4041,7 @@
                 chgd.finilize();
             }
 
-            for (var i = 0; i < targets.length; i += 1) {
-                var target = targets[i];
-                target.gaze.focused = false;
-                target.gaze.selected = false;
-                if (target.gaze.mapping.className) {
-                    target.classList.remove(target.gaze.mapping.className);
-                }
-            }
+            targets.reset();
             
             if (currentKeyboard) {
                 currentKeyboard.hide();
@@ -4133,11 +4053,61 @@
         }
     };
 
-    // Callback for mapping
-    var isTargetDisabled = function (target) {
-        return (!!currentKeyboard && !target.classList.contains(keyboardMarkers.button)) ||
-                target.style.visibility === 'hidden' ||
-                target.classList.contains(keyboardMarkers.indicator);
+    // Gaze data processing
+    var onDataReceived = function (ts, x, y, pupil, ec) {
+        // Feed unprocessed gaze points to calibration verifier
+        if (calibVerifier.isActive()) {
+            calibVerifier.feed(ts, x, y);
+        }
+        
+        // Now make gaze point correction before feeding to any consumer
+        var point = utils.screenToClient(x, y);
+        if (headCorrector && ec) {
+            if (!lastSample) {
+                headCorrector.init(ec);
+            }
+            point = headCorrector.correct(point, ec);
+        }
+
+        // Next, update the fixation point
+        fixdet.feed(ts, point.x, point.y);
+        
+        // External script should receive the sample before a possible selection happens
+        if (typeof callbacks.sample === 'function') {
+            callbacks.sample(ts, point.x, point.y, pupil, ec);
+        }
+
+        // Find the focused target
+        var useFix = settings.mapping.source == GazeTargets.mapping.sources.fixations && fixdet.currentFix;
+        var mappingX = useFix ? fixdet.currentFix.x : point.x,
+            mappingY = useFix ? fixdet.currentFix.y : point.y;
+        
+        var mappingResult = mapper.feed(targets.items(), mappingX, mappingY);
+        if (progress && mappingResult.isNewFocused) {
+            progress.moveTo(mappingResult.focused);
+        }
+
+        // Detect selection
+        if (ec) {
+            utilizeEyeCameraPoints(mappingResult.focused, ts, point, pupil, ec);
+        }
+        
+        selector.feed(targets.items(), mappingResult.focused, lastSample ? ts - lastSample.ts : 0);
+        
+        // Finally, update dwell-time progress and gaze pointer
+        if (mappingResult.lastFocused && progress) {
+            progress.update(utils.bool(mappingResult.lastFocused.gaze.selection.showProgress) ? mappingResult.lastFocused : null);
+        }
+        
+        updatePointer(ts, point);
+        
+        lastSample = {
+            ts: ts,
+            x: x,
+            y: y,
+            pupil: pupil,
+            ec: ec
+        };
     };
 
     var utilizeEyeCameraPoints = function (focused, ts, point, pupil, ec) {
@@ -4161,27 +4131,36 @@
         }
     };
 
-    // Helping functions
-    function loadCSS(version) {
-        if (!settings.css.file) {
-            return;
+    function updatePointer(ts, point) {
+        if (utils.bool(settings.pointer.show)) {
+            var pt = {x: 0, y: 0};
+            if (settings.mapping.source == GazeTargets.mapping.sources.samples) {
+                pt.x = point.x; 
+                pt.y = point.y;
+            } else if (settings.mapping.source == GazeTargets.mapping.sources.fixations) {
+                if (fixdet.currentFix) {
+                    pt.x = fixdet.currentFix.x; 
+                    pt.y = fixdet.currentFix.y;
+                }
+            }
+            if (smoother) {
+                pt = smoother.smooth(ts, pt.x, pt.y);
+            }
+            pointer.moveTo(pt);
+        } 
+        else {
+            pointer.show(false);
         }
-
-        var fileName = homePath + settings.css.file;
-        if (version) {
-            fileName += '-' + version;
-        }
-        fileName += '.css';
-
-        var head  = document.getElementsByTagName('head')[0];
-        var link  = document.createElement('link');
-        link.rel  = 'stylesheet';
-        link.type = 'text/css';
-        link.href = fileName;
-        link.media = 'all';
-        head.appendChild(link);
     }
 
+    // Callback for mapping
+    var isTargetDisabled = function (target) {
+        return (!!currentKeyboard && !target.classList.contains(keyboardMarkers.button)) ||
+                target.style.visibility === 'hidden' ||
+                target.classList.contains(keyboardMarkers.indicator);
+    };
+
+    // Configurations
     function configureSettings() {
         var reqComp;
         var requiredComponents = {
@@ -4209,95 +4188,6 @@
         
         reqComp = createScrollerSettings();
         utils.extend(true, requiredComponents, reqComp);
-
-        return requiredComponents;
-    }
-
-    function createAndInitComponents(requiredComponents) {
-        root.GazeTargets.ETUDPanel.init(settings.etudPanel);
-
-        pointer = root.GazeTargets.Pointer;
-        pointer.init(settings.pointer);
-
-        fixdet = new GazeTargets.FixationDetector(settings.fixdet);
-        calibVerifier = new GazeTargets.CalibrationVerifier(settings.calibVerifier);
-
-        if (utils.bool(settings.scroller.enabled)) {        
-            scroller = new GazeTargets.Scroller(settings.scroller);
-        }
-        if (utils.bool(settings.headCorrector.enabled)) {        
-            headCorrector = new GazeTargets.HeadCorrector(settings.headCorrector);
-        }
-        if (utils.bool(settings.smoother.enabled)) {
-            smoother = new GazeTargets.Smoother(settings.smoother);
-        }
-
-        if (requiredComponents.dwellProgress) {
-            progress = GazeTargets.Progress;
-            progress.init(settings.progress);
-        }
-        
-        if (requiredComponents.nodDetector) {
-            nodDetector = new GazeTargets.HeadGestureDetector(GazeTargets.selection.settings.nod, settings.headGesture);
-        }
-        
-        createCustomHeadGestureDetectors(requiredComponents.customHeadGestureDetectors);
-        
-        mapper = root.GazeTargets.Mapper;
-        mapper.init(settings.mapping, isTargetDisabled, callbacks.target);
-        
-        selector = root.GazeTargets.Selector;
-        selector.init(settings.selection, isTargetDisabled, nodDetector, chgDetectors, callbacks.target);
-    }
-
-    function createCustomHeadGestureDetectors(requiredDetectors) {
-        
-        var addClickHandler = function (btn, name) {
-            btn.addEventListener('click', function () { 
-                GazeTargets.calibrateCustomHeadGesture(name, function (state) {
-                    if (state === 'finished') {
-                        // TODO: handle finished event;
-                    }
-                });
-            });
-        };
-
-        for (var name in requiredDetectors) {
-            if (!chgDetectors[name]) {
-                chgDetectors[name] = new GazeTargets.CustomHeadGestureDetector(name, settings.customHeadGestureDetector);
-            }
-        }
-        
-        GazeTargets.CustomHeadGestureCalibrator.createUI(settings.customHeadGestureDetector.calibration.ui,
-            chgDetectors, addClickHandler);
-    }
-
-    function createKeyboard(name) {
-        var params = GazeTargets.keyboards[name];
-        if (!params.selection || !params.selection.type) {
-            params.selection = { type: GazeTargets.selection.types.cumulativeDwell };
-        }
-
-        // extend the keyboard parameter with 'selection' and 'mapping'
-        var requiredComponents = configureTargetSettings(params);
-        params.name = name;
-        
-        keyboards[name] = new root.GazeTargets.Keyboard(params, keyboardMarkers, {
-            hide: function () {
-                if (callbacks.keyboard) {
-                    callbacks.keyboard(currentKeyboard, false);
-                }
-                currentKeyboard = null;
-                GazeTargets.updateTargets();
-            },
-            show: function (keyboard) {
-                currentKeyboard = keyboard;
-                if (callbacks.keyboard) {
-                    callbacks.keyboard(currentKeyboard, true);
-                }
-                GazeTargets.updateTargets();
-            }
-        });
 
         return requiredComponents;
     }
@@ -4363,26 +4253,117 @@
         return requiredComponents;
     }
 
-    function updatePointer(ts, point) {
-        if (utils.bool(settings.pointer.show)) {
-            var pt = {x: 0, y: 0};
-            if (settings.mapping.source == GazeTargets.mapping.sources.samples) {
-                pt.x = point.x; 
-                pt.y = point.y;
-            } else if (settings.mapping.source == GazeTargets.mapping.sources.fixations) {
-                if (fixdet.currentFix) {
-                    pt.x = fixdet.currentFix.x; 
-                    pt.y = fixdet.currentFix.y;
-                }
-            }
-            if (smoother) {
-                pt = smoother.smooth(ts, pt.x, pt.y);
-            }
-            pointer.moveTo(pt);
-        } 
-        else {
-            pointer.show(false);
+    // Component loading, creation, initilization
+    function loadCSS(version) {
+        if (!settings.css.file) {
+            return;
         }
+
+        var fileName = homePath + settings.css.file;
+        if (version) {
+            fileName += '-' + version;
+        }
+        fileName += '.css';
+
+        var head  = document.getElementsByTagName('head')[0];
+        var link  = document.createElement('link');
+        link.rel  = 'stylesheet';
+        link.type = 'text/css';
+        link.href = fileName;
+        link.media = 'all';
+        head.appendChild(link);
+    }
+
+    function createAndInitComponents(requiredComponents) {
+        root.GazeTargets.ETUDPanel.init(settings.etudPanel);
+
+        pointer = root.GazeTargets.Pointer;
+        pointer.init(settings.pointer);
+
+        fixdet = new GazeTargets.FixationDetector(settings.fixdet);
+        calibVerifier = new GazeTargets.CalibrationVerifier(settings.calibVerifier);
+
+        if (utils.bool(settings.scroller.enabled)) {        
+            scroller = new GazeTargets.Scroller(settings.scroller);
+        }
+        if (utils.bool(settings.headCorrector.enabled)) {        
+            headCorrector = new GazeTargets.HeadCorrector(settings.headCorrector);
+        }
+        if (utils.bool(settings.smoother.enabled)) {
+            smoother = new GazeTargets.Smoother(settings.smoother);
+        }
+
+        if (requiredComponents.dwellProgress) {
+            progress = GazeTargets.Progress;
+            progress.init(settings.progress);
+        }
+        
+        if (requiredComponents.nodDetector) {
+            nodDetector = new GazeTargets.HeadGestureDetector(GazeTargets.selection.settings.nod, settings.headGesture);
+        }
+        
+        createCustomHeadGestureDetectors(requiredComponents.customHeadGestureDetectors);
+        
+        mapper = root.GazeTargets.Mapper;
+        mapper.init(settings.mapping, isTargetDisabled, callbacks.target);
+        
+        selector = root.GazeTargets.Selector;
+        selector.init(settings.selection, isTargetDisabled, nodDetector, chgDetectors, callbacks.target);
+        
+        targets = root.GazeTargets.Targets;
+        targets.init(settings.targets, keyboards);
+    }
+
+    function createCustomHeadGestureDetectors(requiredDetectors) {
+        
+        var addClickHandler = function (btn, name) {
+            btn.addEventListener('click', function () { 
+                GazeTargets.calibrateCustomHeadGesture(name, function (state) {
+                    if (state === 'finished') {
+                        // TODO: handle finished event;
+                    }
+                });
+            });
+        };
+
+        for (var name in requiredDetectors) {
+            if (!chgDetectors[name]) {
+                chgDetectors[name] = new GazeTargets.CustomHeadGestureDetector(name, settings.customHeadGestureDetector);
+            }
+        }
+        
+        GazeTargets.CustomHeadGestureCalibrator.createUI(settings.customHeadGestureDetector.calibration.ui,
+            chgDetectors, addClickHandler);
+    }
+
+    function createKeyboard(name) {
+        var params = GazeTargets.keyboards[name];
+        if (!params.selection || !params.selection.type) {
+            params.selection = { type: GazeTargets.selection.types.cumulativeDwell };
+        }
+
+        // extend the keyboard parameter with 'selection' and 'mapping'
+        var requiredComponents = configureTargetSettings(params);
+        params.name = name;
+        
+        keyboards[name] = new root.GazeTargets.Keyboard(params, keyboardMarkers, {
+            hide: function () {
+                if (callbacks.keyboard) {
+                    callbacks.keyboard(currentKeyboard, false);
+                }
+                currentKeyboard = null;
+                GazeTargets.updateTargets();
+            },
+            show: function (keyboard) {
+                currentKeyboard = keyboard;
+                if (callbacks.keyboard) {
+                    callbacks.keyboard(currentKeyboard, true);
+                }
+                GazeTargets.updateTargets();
+            }
+        });
+
+        return requiredComponents;
     }
 
 })(window);
@@ -5163,6 +5144,85 @@
     }
 
     root.GazeTargets.Smoother = Smoother;
+
+})(window);
+// Target manager
+
+(function (root) {
+
+    'use strict';
+
+    var Targets = {
+    	init: function (_settings, _keyboards) {
+    		settings = _settings;
+    		keyboards = _keyboards;
+    	},
+    	items: function () {
+    		return items;
+    	},
+    	update: function (kbd, scrollerItems) {
+	        items = [];
+	        var ts, elems, i;
+	        
+	        for (var idx in settings) {
+	            ts = settings[idx];
+	            elems = document.querySelectorAll(ts.selector);
+	            for (i = 0; i < elems.length; i += 1) {
+	                add(elems[i], ts);
+	            }
+	        }
+	        
+	        if (kbd) {
+	            ts = kbd.keyboard.options;
+	            elems = kbd.keyboard.getDOM().querySelectorAll(kbd.selector);
+	            for (i = 0; i < elems.length; i += 1) {
+	                add(elems[i], ts);
+	            }
+	        }
+	        
+	        for (var target in scrollerItems) {
+	            ts = scrollerItems[target];
+	            elems = document.querySelectorAll(ts.selector);
+	            for (i = 0; i < elems.length; i += 1) {
+	                add(elems[i], ts);
+	            }
+	        }
+    	},
+    	reset: function () {
+            for (var i = 0; i < items.length; i += 1) {
+                var item = items[i];
+                var gaze = item.gaze;
+                gaze.focused = false;
+                gaze.selected = false;
+                if (gaze.mapping.className) {
+                    item.classList.remove(gaze.mapping.className);
+                }
+            }
+    	}
+    };
+
+    var add = function (elem, settings) {
+        elem.gaze = {
+            focused: false,
+            selected: false,
+            attention: 0,
+            selection: settings.selection,
+            mapping: settings.mapping,
+            keyboard: settings.keyboard ? keyboards[settings.keyboard] : null
+        };
+        items.push(elem);
+    };
+
+    var items = [];
+    var settings;
+    var keyboards;
+
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    root.GazeTargets.Targets = Targets;
 
 })(window);
 (function (root) {

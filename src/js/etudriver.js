@@ -199,12 +199,7 @@
 
     var onWebSocketError = function (evt) {
         utils.debug('onWebSocketError', evt);
-        if (lblLog) {
-            lblLog.innerHTML = 'Problems in the connection to WebSocket server';
-            setTimeout(function () {
-                lblLog.innerHTML = '';
-            }, 5000);
-        }
+        panel.showMessage('Problems in the connection to WebSocket server', 5000);
     };
 
     var getState = function (flags, device) {
