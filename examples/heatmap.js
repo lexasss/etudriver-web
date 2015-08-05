@@ -8,8 +8,8 @@ $(function (){
     var debug = false;
 
     var loadNewImage = function (elem) {
-        var imgIndex = Math.floor(Math.random() * 90) + 1;
-        elem.css({backgroundImage: 'url(http://www.jimbase.com/wp-content/uploads/2013/01/Wallpaper-1080p-' + imgIndex + '-1024x576.jpg)'});
+        var imgIndex = Math.floor(Math.random() * 90) + 10;
+        elem.css({backgroundImage: 'url(http://wallpaperstock.net/wallpapers/thumbs1/492' + imgIndex + 'wide.jpg)'});
     };
     
     try {
@@ -62,8 +62,8 @@ $(function (){
     loadNewImage(images[0]);
 
     // Tracking
-    etudriver.init({
-        panel: {
+    GazeTargets.init({
+        etudPanel: {
             show: true
         },
         pointer: {
@@ -81,7 +81,7 @@ $(function (){
                 }
                 loadNewImage(images[1 - imgIdx])
             } else if (state.isTracking) {
-                //heatmap.clear();
+                heatmap.clear();
                 if (!debug)  {
                     canvas.addClass('hidden');
                     controls.addClass('hidden');

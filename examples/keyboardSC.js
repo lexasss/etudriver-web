@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var sc = new SymbolCreator();
     var callbacks = sc.getCallbacks();
     
-    etudriver.keyboard.sc = {
+    GazeTargets.keyboards.sc = {
         layout: '[\"c.png:custom,f.png:custom,n.png:custom,o.png:custom,i.png:custom,j.png:custom,t.png:custom,_.png:custom,backspace.png,hide.png\"]',
         callbacks: callbacks,
         className: {
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         imageFolder: 'images/kbd/sc/',
     };
     
-    etudriver.init({
+    GazeTargets.init({
         targets: [
             {
                 selector: '.data',
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, {
         // callbacks
         target: function (event, target) {
-            if (event === etudriver.event.selected) {
+            if (event === GazeTargets.events.selected) {
                 var evObj = new MouseEvent('mousedown', {
                     'view': window,
                     'bubbles': false,
@@ -117,9 +117,9 @@ function SymbolCreator () {
         
         if (str.length === 3 && !result) {
             state = str.substr(1);
-            parse(state);
+            parse(state, input);
         }
-    
+
         if (result) {
             insert(result, input);
             state = '';

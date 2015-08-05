@@ -1,0 +1,29 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Calibration Verification module</title>
+  <link rel="stylesheet" href="../src/css/calibVerifier.css">
+  <link rel="stylesheet" href="../node_modules/qunitjs/qunit/qunit.css">
+</head>
+
+<body>
+  <button onclick="test({h: {a: 0, b: 0}, v: {a: 0, b: 0}})">test ideal</button><br>
+  <button onclick="test({h: {a: 0, b: 30}, v: {a: 0, b: -60}})">test shifted</button><br>
+  <button onclick="test({h: {a: 0.1, b: 0}, v: {a: 0, b: 0}})">test expanded H</button><br>
+  <button onclick="test({h: {a: 0, b: 0}, v: {a: -0.1, b: 0}})">test shrinked V</button><br>
+  <button onclick="test({h: {a: 0.1, b: 40}, v: {a: 0, b: 0}})">test gradual H</button><br>
+  <button onclick="test({h: {a: 0, b: 0}, v: {a: 0.1, b: 40}})">test gradual V</button><br>
+  <button onclick="test({h: {a: 0, b: 0}, v: {a: -0.1, b: 40}})">test gradual V</button><br>
+  <button onclick="test({h: {a: (Math.random() - 0.5) * 0.16, b: (Math.random() - 0.5) * 80}, v: {a: (Math.random() - 0.5) * 0.16, b: (Math.random() - 0.5) * 80}})">test random</button><br>
+
+  <div id="req" style="font-weight: bold; margin-bottom: 2em">Requirement: npm install --save-dev qunitjs</div>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+  <script src="../src/js/fullscreen.js"></script>
+  <script src="../src/js/utils.js"></script>
+  <script src="../src/js/calibVerifier.js"></script>
+  <!--script src="../node_modules/qunitjs/qunit/qunit.js"></script-->
+  <script src="calibVerification.js"></script>
+</body>
+
+</html>

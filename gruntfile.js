@@ -1,17 +1,21 @@
 module.exports = function(grunt) {
 
+    var srcDir = 'src/';
+    var buildDir = 'build/';
+    var buildName = buildDir + '<%= pkg.name %>';
+
     grunt.initConfig({
 
         pkg: grunt.file.readJSON('package.json'),
         
         concat: {
             js: {
-                src: 'js/*.js',
-                dest: '<%= pkg.name %>.js'
+                src: srcDir + 'js/**/*.js',
+                dest: buildName + '.js'
             },
             css: {
-                src: 'css/**/*.css',
-                dest: '<%= pkg.name %>.css'
+                src: srcDir + 'css/**/*.css',
+                dest: buildName + '.css'
             }
         },
         
@@ -19,8 +23,8 @@ module.exports = function(grunt) {
             options: {
                 browsers: ['last 3 versions', 'ff > 12']
             },
-            no_dest: {
-                src: ['<%= pkg.name %>.css', 'examples/*.css']
+            all: {
+                src: [buildName + '.css', 'examples/*.css']
             }
         },
     
@@ -28,28 +32,42 @@ module.exports = function(grunt) {
             options: {
                 banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
             },
-            dist: {
-                files: {
-                    '<%= pkg.name %>.min.js': ['<%= concat.js.dest %>']
-                }
+            build: {
+                src: [buildName + '.js'],
+                dest: buildName + '.min.js'
             }
         },
         
         csso: {
-            dist: {
-                files: {
-                    '<%= pkg.name %>.min.css': ['<%= concat.css.dest %>']
-                }
+            build: {
+                src: [buildName + '.css'],
+                dest: buildName + '.min.css'
+                // files: {
+                //     buildName + '.min.css': [buildName + '.css'] //['<%= concat.css.dest %>']
+                // }
             }
         },
         
         copy: {
             versionize: {
                 files: [
-                    { src: '<%= concat.js.dest %>', dest: '<%= pkg.name %>-<%= pkg.version %>.js' },
-                    { src: '<%= concat.css.dest %>', dest: '<%= pkg.name %>-<%= pkg.version %>.css' },
-                    { src: '<%= pkg.name %>.min.js', dest: '<%= pkg.name %>-<%= pkg.version %>.min.js' },
-                    { src: '<%= pkg.name %>.min.css', dest: '<%= pkg.name %>-<%= pkg.version %>.min.css' }
+                    { src: buildName + '.js', dest: buildName + '-<%= pkg.version %>.js' },
+                    { src: buildName + '.css', dest: buildName + '-<%= pkg.version %>.css' },
+                    { src: buildName + '.min.js', dest: buildName + '-<%= pkg.version %>.min.js' },
+                    { src: buildName + '.min.css', dest: buildName + '-<%= pkg.version %>.min.css' }
+                ]
+            },
+            media: {
+                files: [
+                    { 
+                        expand: true,
+                        cwd: srcDir,
+                        src: [
+                            'images/**/*.png', 
+                            'sounds/**/*.wav'
+                        ],
+                        dest: buildDir
+                    }
                 ]
             }
         },
@@ -64,7 +82,9 @@ module.exports = function(grunt) {
         },*/
         
         jshint: {
-            files: ['gruntfile.js', 'js/**/*.js', 'test/**/*.js'],
+            files: [
+                'src/js/**/*.js'
+            ],
             options: {
                 globals: {
                     jQuery: true,
@@ -77,7 +97,7 @@ module.exports = function(grunt) {
         
         csslint: {
             main: {
-                src: 'css/**/*.css'
+                src: 'src/css/**/*.css'
             }
         }
     });
@@ -94,5 +114,7 @@ module.exports = function(grunt) {
     //grunt.registerTask('less', ['less']);
     grunt.registerTask('ver', ['copy:versionize']);
     grunt.registerTask('inspect', ['jshint', 'csslint']);
-    grunt.registerTask('default', ['concat', 'autoprefixer', 'uglify', 'csso']);
+    grunt.registerTask('min', ['uglify', 'csso']);
+    grunt.registerTask('default', ['concat', 'autoprefixer', 'copy:media']);
+    grunt.registerTask('full', ['concat', 'autoprefixer', 'copy', 'uglify', 'csso']);
 };

@@ -1,0 +1,5 @@
+.gt-progress {
+    pointer-events: none;
+    position: fixed;
+    z-index: 2147483646;
+}

@@ -1,13 +1,13 @@
 <html>
 <head>
     <title>Gaze tracking with ETU-Driver over WebSocket: custom button to control an eye-tracker</title>
-    <script type="text/javascript" src="../etudriver.js"></script>
+    <script type="text/javascript" src="../build/gazeTargets.js"></script>
 
     <script type="text/javascript">
         var selCount = 0;
         document.addEventListener('DOMContentLoaded', function() {
-            etudriver.init({
-                panel: {
+            GazeTargets.init({
+                etudPanel: {
                     show: function () {
                         return false;
                     }
@@ -16,7 +16,7 @@
                     {
                         selector: '.gaze',
                         selection: {
-                            type: etudriver.selection.competitiveDwel,
+                            type: GazeTargets.selection.types.competitiveDwel,
                             className: 'selected'
                         }
                     }
@@ -32,7 +32,7 @@
                         } else {
                             button.classList.remove('disabled');
                         }
-                    }
+                    };
 
                     setDisabled(options, !state.isServiceRunning || state.isTracking || state.isBusy);
                     setDisabled(calibrate, !state.isConnected || state.isTracking || state.isBusy);
@@ -48,20 +48,23 @@
             var calibrate = document.getElementById('calibrate');
             var verify = document.getElementById('verify');
             var toggle = document.getElementById('toggle');
+
             options.addEventListener('click', function () {
-                etudriver.showOptions();
+                GazeTargets.ETUDriver.showOptions();
             });
+
             calibrate.addEventListener('click', function () {
-                etudriver.calibrate();
+                GazeTargets.ETUDriver.calibrate();
             });
+
             verify.addEventListener('click', function () {
                 var buttons = document.querySelectorAll('.gaze');
                 for (var i = 0; i < buttons.length; i++) {
                     buttons[i].classList.remove('gaze');
-                };
-                etudriver.updateTargets();
+                }
+                GazeTargets.updateTargets();
 
-                etudriver.verifyCalibration({
+                GazeTargets.verifyCalibration({
                         rows: 3,
                         columns: 3,
                         duration: 1500,
@@ -72,44 +75,44 @@
                             size: 20                // size of "aura", px
                         }
                     },{
-                    started: function (target) {
-                        console.log('Next target at [' + target.cell.row + ' ' + target.cell.col + ']');
-                    },
-                    targetStarted: function (target) {
-                        console.log('started target at [' + target.cell.row + ' ' + target.cell.col + ']');
-                    },
-                    targetFinished: function (finished, next) {
-                        console.log('Finished target at [' + finished.cell.row + ' ' + finished.cell.col + ']');
-                        if (next) {
-                            console.log('Next target at [' + next.cell.row + ' ' + next.cell.col + ']');
-                        }
-                    },
-                    finished: function (result) {
-                        var avgToText = function (name, value) {
-                            return name + ': ' + value.mean.toFixed(1) + ' (' + value.std.toFixed(1) + ')';
-                        }
-                        console.log(avgToText('Amplitude', result.amplitude));
-                        console.log(avgToText('Angle', result.angle));
-                        console.log(avgToText('STD', result.std));
-                        console.log('Rating: amplitude = ' + result.interpretation.rating.amplitude +
-                            ', uniformity = ' + result.interpretation.rating.uniformity);
+                        started: function (target) {
+                            console.log('Next target at [' + target.cell.row + ' ' + target.cell.col + ']');
+                        },
+                        targetStarted: function (target) {
+                            console.log('started target at [' + target.cell.row + ' ' + target.cell.col + ']');
+                        },
+                        targetFinished: function (finished, next) {
+                            console.log('Finished target at [' + finished.cell.row + ' ' + finished.cell.col + ']');
+                            if (next) {
+                                console.log('Next target at [' + next.cell.row + ' ' + next.cell.col + ']');
+                            }
+                        },
+                        finished: function (result) {
+                            var avgToText = function (name, value) {
+                                return name + ': ' + value.mean.toFixed(1) + ' (' + value.std.toFixed(1) + ')';
+                            };
+                            console.log(avgToText('Amplitude', result.amplitude));
+                            console.log(avgToText('Angle', result.angle));
+                            console.log(avgToText('STD', result.std));
+                            console.log('Rating: amplitude = ' + result.interpretation.rating.amplitude +
+                                ', uniformity = ' + result.interpretation.rating.uniformity);
 
-                        if (result.apx.h) {
-                            console.log('H: ' + (result.apx.h.map(function (v) { return v.toFixed(1); })).join(', '));
-                        }
-                        if (result.apx.v) {
-                            console.log('V: ' + (result.apx.v.map(function (v) { return v.toFixed(1); })).join(', '));
-                        }
+                            if (result.apx.h) {
+                                console.log('H: ' + (result.apx.h.map(function (v) { return v.toFixed(1); })).join(', '));
+                            }
+                            if (result.apx.v) {
+                                console.log('V: ' + (result.apx.v.map(function (v) { return v.toFixed(1); })).join(', '));
+                            }
 
-                        for (var i = 0; i < buttons.length; i++) {
-                            buttons[i].classList.add('gaze');
-                        };
-                        etudriver.updateTargets();
-                    }
+                            for (var i = 0; i < buttons.length; i++) {
+                                buttons[i].classList.add('gaze');
+                            }
+                            GazeTargets.updateTargets();
+                        }
                 });
             });
             toggle.addEventListener('click', function () {
-                etudriver.toggleTracking();
+                GazeTargets.ETUDriver.toggleTracking();
             });
         });
 

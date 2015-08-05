@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chat = document.getElementById('chat');
     input = document.getElementById('input');
     
-    etudriver.keyboard.send = {
+    GazeTargets.keyboards.send = {
         // required
         layout: '[\"!|!|1,?|?|2,:|:|3,;|;|4,\\u0027|\\u0027|5,\\u0022|\\u0022|6,&|&|7,@|@|8,(|(|9,)|)|0,backspace.png\"],\
                  [\"q|Q|+,w|W|-:,e|E|*,r|R|\\/,t|T|=,y|Y|%,u|U|$,i|I|#,o|O|(,p|P|),enter.png\"],\
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         imageFolder: 'images/kbd/default-send/',     // location of images relative to the HTML file
     };
     
-    etudriver.init({
+    GazeTargets.init({
         targets: [
             {
                 selector: '#input',
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, {
         // callbacks
         target: function (event, target) {
-            if (event === etudriver.event.selected) {
+            if (event === GazeTargets.events.selected) {
                 var evObj = new MouseEvent('mousedown', {
                     'view': window,
                     'bubbles': false,
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('warning').classList.add('hidden');
             }
             if (state.isTracking) {
-                etudriver.getKeyboard('send').show(input);
+                GazeTargets.getKeyboard('send').show(input);
             }
         }
     });

@@ -1,18 +1,18 @@
 <html>
 <head>
     <title>Gaze tracking with ETU-Driver over WebSocket: scrolling pages</title>
-    <script type="text/javascript" src="../etudriver.js"></script>
+    <script type="text/javascript" src="../build/gazeTargets.js"></script>
     
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            etudriver.init({
+            GazeTargets.init({
                 mapping: {
-                    type: etudriver.mapping.expanded
+                    type: GazeTargets.mapping.types.expanded
                 },
                 scroller: { 
                     enabled: true,
                     speeds: [2, 8, 15, 0, -1],
-                    type: etudriver.scroller.fixation,
+                    controller: GazeTargets.scroller.controllers.fixation,
                     imageFolder: '../images/scroller/'
                 }
             }, {
@@ -61,7 +61,7 @@
             background-color: #D9D9FF;
         }
        
-        .etud-target {
+        .gt-target {
             display: inline-block;
             background-color: deepskyblue;
             margin: 20px 100px;

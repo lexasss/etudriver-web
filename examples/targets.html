@@ -1,12 +1,12 @@
 <html>
 <head>
     <title>Gaze tracking with ETU-Driver over WebSocket: targets of various response to gaze pointer</title>
-    <script type="text/javascript" src="../etudriver.js"></script>
+    <script type="text/javascript" src="../build/gazeTargets.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
             var log = document.getElementById('log');
-            etudriver.settings.selection.duration = 100;
-            etudriver.init({
+            GazeTargets.selection.settings.defaults.duration = 100;
+            GazeTargets.init({
                 // custom settings
                 panel: {
                     displaySamples: true
@@ -15,7 +15,7 @@
                     {
                         selector: '.competitiveDwell',
                         selection: {
-                            type: etudriver.selection.competitiveDwell,
+                            type: GazeTargets.selection.types.competitiveDwell,
                             className: 'competitiveDwell-selected'
                         },
                         mapping: {
@@ -25,7 +25,7 @@
                     {
                         selector: '.simpleDwell',
                         selection: {
-                            type: etudriver.selection.simpleDwell,
+                            type: GazeTargets.selection.types.simpleDwell,
                             className: 'simpleDwell-selected',
                             audio: 'examples/targets.wav'
                         },
@@ -36,7 +36,7 @@
                     {
                         selector: '.nod',
                         selection: {
-                            type: etudriver.selection.nod,
+                            type: GazeTargets.selection.types.nod,
                             className: 'nod-selected'
                         },
                         mapping: {
@@ -45,8 +45,8 @@
                     }
                 ],
                 mapping: {
-                    type: etudriver.mapping.expanded,
-                    source: etudriver.source.samples
+                    type: GazeTargets.mapping.types.expanded,
+                    source: GazeTargets.mapping.sources.samples
                 },
                 pointer: {
                     size: 15,
@@ -118,11 +118,11 @@
             width: 0;
         }
         
-        .etud-pointer {
+        .gt-pointer {
             background-color: Blue;
         }
        
-        .etud-target {
+        .gt-target {
             display: inline-block;
             margin: 20px 100px;
             width: 140px;
@@ -186,14 +186,14 @@
 <body>
     <div id="warning">You need the "ETU-Driver Service" application running <br> with "WebSocket server" flag set on</div>
     <div class="container">
-        <div class="etud-target simpleDwell">left SD</div>
-        <div class="etud-target simpleDwell">right SD</div>
+        <div class="gt-target simpleDwell">left SD</div>
+        <div class="gt-target simpleDwell">right SD</div>
         <br>
-        <div class="etud-target competitiveDwell">left CD</div>
-        <div class="etud-target competitiveDwell">right CD</div>
+        <div class="gt-target competitiveDwell">left CD</div>
+        <div class="gt-target competitiveDwell">right CD</div>
         <br>
-        <div class="etud-target nod">left NOD</div>
-        <div class="etud-target nod">right NOD</div>
+        <div class="gt-target nod">left NOD</div>
+        <div class="gt-target nod">right NOD</div>
         <br>
     </div>
     <div id="log"></div>

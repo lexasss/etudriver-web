@@ -98,8 +98,8 @@ $(function (){
     
     // Tracking
     
-    etudriver.init({
-        panel: {
+    GazeTargets.init({
+        etudPanel: {
             show: true
         },
         pointer: {

@@ -1,0 +1,80 @@
+.gt-calibVerifier-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.gt-calibVerifier-container > .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 48px;
+    height: 48px;
+    background: url('images/calibVerifier/close.png') no-repeat center;
+}
+
+.gt-calibVerifier-target {
+    position: absolute;
+}
+
+.gt-calibVerifier-pulsator {
+    position: absolute;
+}
+
+.gt-calibVerifier-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.gt-calibVerifier-containerDefault {
+    background-color: #E0E0E0;
+}
+
+.gt-calibVerifier-targetDefault {
+    background-color: #000;
+}
+
+.gt-calibVerifier-pulsatorDefault {
+    background-color: #CCC;
+}
+
+.gt-calibVerifier-rating {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    font: 20pt/48px Arial, sans-serif;
+    color: #444;
+    text-align: center;
+}
+
+.gt-calibVerifier-rating > span {
+    margin: 0 0.5em;
+}
+
+.gt-calibVerifier-rating > .spacer {
+    display: inline-block;
+    width: 4em;
+}
+
+.gt-calibVerifier-rating > .star {
+    display: inline-block;
+    width: 48px;
+    height: 54px;
+    padding: 0;
+    vertical-align: sub;
+}
+
+.gt-calibVerifier-rating > .full {
+    background: url('images/calibVerifier/star-full.png') no-repeat center;
+}
+
+.gt-calibVerifier-rating > .half {
+    background: url('images/calibVerifier/star-half.png') no-repeat center;
+}
+
+.gt-calibVerifier-rating > .empty {
+    background: url('images/calibVerifier/star-empty.png') no-repeat center;
+}

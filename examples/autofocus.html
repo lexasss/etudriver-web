@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>Gaze tracking with ETU-Driver over WebSocket: autofocus</title>
-    <script type="text/javascript" src="../etudriver.js"></script>
+    <script type="text/javascript" src="../build/gazeTargets.js"></script>
     
     <script type="text/javascript">
         var focusedInput;
@@ -9,7 +9,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             var log = document.getElementById('log');
             
-            etudriver.init({
+            GazeTargets.init({
                 targets: [
                     { 
                         selector: 'input[type="text"], textarea',
@@ -23,7 +23,7 @@
             }, {
                 // callbacks
                 target: function (event, target) {
-                    if (event === etudriver.event.selected) {
+                    if (event === GazeTargets.events.selected) {
                         target.focus();
                     }
                 },

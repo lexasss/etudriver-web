@@ -1,13 +1,13 @@
 <html>
 <head>
     <title>Gaze tracking with ETU-Driver over WebSocket: simplest</title>
-    <script type="text/javascript" src="../etudriver.js"></script>
+    <script type="text/javascript" src="../build/gazeTargets.js"></script>
     
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
             var log = document.getElementById('log');
             
-            etudriver.init({ /* use only default settings */ }, {
+            GazeTargets.init({ /* use only default settings */ }, {
                 // callbacks
                 target: function (event, target) {
                     log.innerHTML += '<div>' + event + ': ' + (target.textContent || target.innerText) + '</div>';
@@ -66,7 +66,7 @@
             width: 0;
         }
        
-        .etud-target {
+        .gt-target {
             display: inline-block;
             background-color: deepskyblue;
             margin: 20px 100px;
@@ -82,12 +82,12 @@
             vertical-align: middle;
         }
 
-        .etud-focused {
+        .gt-focused {
             background-color: tomato;
             color: white;
         }        
 
-        .etud-selected {
+        .gt-selected {
             background-color: #CC4F39;
             color: white;
         }        
@@ -98,8 +98,8 @@
 <body>
     <div id="warning">You need the "ETU-Driver Service" application running <br> with "WebSocket server" flag set on</div>
     <div class="container">
-        <div class="etud-target">left</div>
-        <div class="etud-target">right</div>
+        <div class="gt-target">left</div>
+        <div class="gt-target">right</div>
     </div>
     <div id="log"></div>
 </body>
