@@ -1,10 +1,10 @@
 ﻿{
   "name": "gazeTargets",
   "version": "0.2.0",
-  "description": "Gaze for Web with ETU-Driver on WebSocket",
-  "keywords": "gaze eye tracking web",
-  "author": "Oleg Špakov",
-  "license": "LGPL",
+  "description": "Gaze for Web with ETU-Driver over WebSocket",
+  "keywords": "eye gaze tracking web",
+  "author": "github.com/lexasss",
+  "license": "MIT",
   "main": "gazeTargets.js",
   "repository": {
     "type": "git",
