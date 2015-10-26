@@ -43,8 +43,7 @@
         naive: 1,
         
         // mapping is based on the extended size of targets
-        // extra settings for settings.mapping:
-        //   expansion      - expansion size in pixels
+        // extra settings for settings.mapping are listed in GazeTargets.mapping.settings.expanded
         expanded: 2
     };
 
@@ -53,8 +52,7 @@
         none: 0,
         
         // tries to follow the reading lines
-        // extra settings for settings.mapping:
-        //   maxSaccadeLength      - maximum progressing saccade length, in pixels
+        // extra settings for settings.mapping are listed in GazeTargets.mapping.settings.models.reading
         reading: 1
     };
 
@@ -70,13 +68,14 @@
         
         // type-dependent settings
         expanded: {
-            expansion: 50
+            expansion: 50       // expansion size in pixels
         },
         
         // model-dependent settings
         models: {
             reading: {
-                maxSaccadeLength: 250
+                maxSaccadeLength: 250,      // maximum progressing saccade length, in pixels
+                maxSaccadeAngleRatio: 0.7   // |sacc.y| / sacc.dx
             }
         }
     };

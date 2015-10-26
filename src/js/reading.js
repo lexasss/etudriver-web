@@ -32,7 +32,7 @@
                 var saccade = Math.sqrt(dx * dx + dy * dy);
 
                 isReadingFixation = saccade <= settings.maxSaccadeLength && 
-                    dx > Math.abs(dy);
+                    Math.abs(dy) / dx <= settings.maxSaccadeAngleRatio;
 
                 if (!isReadingFixation) {
                     yOffset = 0;
