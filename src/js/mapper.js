@@ -1,42 +1,65 @@
 // Mapping routine
 // 
 // Require objects in GazeTargets:
-// 	    mapping.types
-// 	    events: { focused, left }
+//         mapping.types
+//      mapping.models
+//         events: { focused, left }
 
 (function (root) {
 
     'use strict';
 
     var Mapper = {
-    	init: function (_settings, _isTargetDisabled, _targetEvent) {
-    		settings = _settings;
-    		isTargetDisabled = _isTargetDisabled;
-    		targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
-	        
-	        mappingTypes = GazeTargets.mapping.types;
-    	},
+        init: function (_settings, _isTargetDisabled, _targetEvent) {
+            settings = _settings;
+            isTargetDisabled = _isTargetDisabled;
+            targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
+            
+            mappingTypes = GazeTargets.mapping.types;
+            mappingModels = GazeTargets.mapping.models;
 
-    	reset: function () {
-    		focused = null;
+            createModel();
+        },
+
+        reset: function () {
+            model.reset();
+            focused = null;
             lastFocused = null;
-    	},
+        },
 
-    	feed: function (targets, x, y) {
-            var mapped = map(targets, x, y);
-	        var isNewFocused = false;
-	        
+        feed: function (targets, x, y, fixationDuration) {
+            var correctedPoint = model.feed(targets, x, y, fixationDuration);
+            var mapped = map(targets, correctedPoint.x, correctedPoint.y);
+            model.setSelected(mapped);
+
+            var isNewFocused = false;
             if (mapped !== focused) {
                 changeFocus(mapped);
                 isNewFocused = !!focused;
-	        }
+            }
 
-	        return {
-	        	focused: focused,
-	        	lastFocused: lastFocused,
-	        	isNewFocused: isNewFocused
-	        };
-	    }
+            return {
+                focused: focused,
+                lastFocused: lastFocused,
+                isNewFocused: isNewFocused
+            };
+        }
+    };
+
+    var createModel = function () {
+        switch (settings.model) {
+        case mappingModels.reading:
+            model = root.GazeTargets.Models.Reading;
+            model.init(settings.reading);
+            break;
+        default:
+            model = {
+                feed: function (targets, x, y) { return { x: x, y: y }; },
+                setSelected: function () { },
+                reset: function () { }
+            };
+            break;
+        }
     };
 
     var map = function (targets, x, y) {
@@ -151,6 +174,9 @@
     var lastFocused = null;
 
     var mappingTypes;
+    var mappingModels;
+
+    var model;
 
     // Publication
     if (!root.GazeTargets) {

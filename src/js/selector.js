@@ -1,34 +1,34 @@
 // Mapping routine
 // 
 // Require objects in GazeTargets:
-// 	    selection.types
-// 	    events: { selected }
+//         selection.types
+//         events: { selected }
 
 (function (root) {
 
     'use strict';
 
     var Selector = {
-    	init: function (_settings, _isTargetDisabled, _nodDetector, _chgDetectors, _targetEvent) {
-    		settings = _settings;
-    		isTargetDisabled = _isTargetDisabled;
-    		nodDetector = _nodDetector;
-    		chgDetectors = _chgDetectors;
-    		targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
+        init: function (_settings, _isTargetDisabled, _nodDetector, _chgDetectors, _targetEvent) {
+            settings = _settings;
+            isTargetDisabled = _isTargetDisabled;
+            nodDetector = _nodDetector;
+            chgDetectors = _chgDetectors;
+            targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
 
-    		selectionTypes = GazeTargets.selection.types;
-    	},
+            selectionTypes = GazeTargets.selection.types;
+        },
 
-    	reset: function () {
+        reset: function () {
             selected = null;
-    	},
+        },
 
-    	feed: function (targets, focused, duration) {
-    		var newSelected = detectSelection(targets, focused, duration);
-        	if (newSelected !== selected) {
-        		select(newSelected);
-        	}
-    	}
+        feed: function (targets, focused, duration) {
+            var newSelected = detectSelection(targets, focused, duration);
+            if (newSelected !== selected) {
+                select(newSelected);
+            }
+        }
     };
 
     var detectSelection = function (targets, focused, duration) {
@@ -39,7 +39,7 @@
         for (var i = startIndex; i < targets.length; i += 1) {
             var target = i < 0 ? focused : targets[i];
             if (i >= 0 && target === focused) {
-            	continue;
+                continue;
             }
             if (isTargetDisabled(target)) {
                 continue;
@@ -81,7 +81,7 @@
         }
 
         return result;
-	};
+    };
 
     var selectCumulativeDwell = function (targets, target, duration, isFocused) {
         var result = false;
@@ -124,13 +124,13 @@
         return result;
     };
 
-	var select = function (target) {
+    var select = function (target) {
         if (selected) {
             selected.gaze.selected = false;
         }
 
         if (target) {
-        	var gazeObj = target.gaze;
+            var gazeObj = target.gaze;
             gazeObj.selected = true;
             if (gazeObj.selection.className) {
                 target.classList.add(gazeObj.selection.className);
@@ -155,7 +155,7 @@
         }
 
         selected = target;
-	};
+    };
 
     var settings;
     var isTargetDisabled;

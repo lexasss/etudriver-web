@@ -38,7 +38,7 @@
         // no mapping (= samples are not processed)
         none: 0,
         
-        // mapping is based on the exact location and size of targets 
+        // mapping is based on the exact location and size of targets
         // no extra settings
         naive: 1,
         
@@ -46,6 +46,16 @@
         // extra settings for settings.mapping:
         //   expansion      - expansion size in pixels
         expanded: 2
+    };
+
+    GazeTargets.mapping.models = {
+        // no model
+        none: 0,
+        
+        // tries to follow the reading lines
+        // extra settings for settings.mapping:
+        //   maxSaccadeLength      - maximum progressing saccade length, in pixels
+        reading: 1
     };
 
     GazeTargets.mapping.sources = {
@@ -61,6 +71,13 @@
         // type-dependent settings
         expanded: {
             expansion: 50
+        },
+        
+        // model-dependent settings
+        models: {
+            reading: {
+                maxSaccadeLength: 250
+            }
         }
     };
 
@@ -336,9 +353,11 @@
         mapping: {          // mapping setting for all targets; accepts:
                             //  - 'type' and 'sources', see below
                             //  - the keys from GazeTargets.mapping.settings.[TYPE]
-                            //    (see comments to the corresponding type in GazeTargets.mapping)
-            type: GazeTargets.mapping.types.naive,    // mapping type, see GazeTargets.mapping
+                            //  - the keys from GazeTargets.mapping.settings.[MODEL]
+                            //    (see comments to the corresponding type and model in GazeTargets.mapping)
+            type: GazeTargets.mapping.types.naive,       // mapping type, see GazeTargets.mapping.types
             source: GazeTargets.mapping.sources.samples, // data source for mapping, see GazeTargets.source
+            model: GazeTargets.mapping.models.none       // mapping model, see GazeTargets.mapping.models
         },
         pointer: {          // gaze pointer settings
             show: true,             // boolean or a function returning boolean
@@ -714,9 +733,10 @@
         // Find the focused target
         var useFix = settings.mapping.source == GazeTargets.mapping.sources.fixations && fixdet.currentFix;
         var mappingX = useFix ? fixdet.currentFix.x : point.x,
-            mappingY = useFix ? fixdet.currentFix.y : point.y;
+            mappingY = useFix ? fixdet.currentFix.y : point.y,
+            fixationDuration = useFix ? fixdet.currentFix.duration : 0;
         
-        var mappingResult = mapper.feed(targets.items(), mappingX, mappingY);
+        var mappingResult = mapper.feed(targets.items(), mappingX, mappingY, fixationDuration);
         if (progress && mappingResult.isNewFocused) {
             progress.moveTo(mappingResult.focused);
         }
@@ -819,6 +839,8 @@
                 utils.extend(true, true, settings.mapping, GazeTargets.mapping.settings.expanded);
                 break;
         }
+        
+        utils.extend(true, true, settings.mapping, GazeTargets.mapping.settings.models);
         
         reqComp = createScrollerSettings();
         utils.extend(true, requiredComponents, reqComp);

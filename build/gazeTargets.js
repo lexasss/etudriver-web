@@ -3404,7 +3404,7 @@
         // no mapping (= samples are not processed)
         none: 0,
         
-        // mapping is based on the exact location and size of targets 
+        // mapping is based on the exact location and size of targets
         // no extra settings
         naive: 1,
         
@@ -3412,6 +3412,16 @@
         // extra settings for settings.mapping:
         //   expansion      - expansion size in pixels
         expanded: 2
+    };
+
+    GazeTargets.mapping.models = {
+        // no model
+        none: 0,
+        
+        // tries to follow the reading lines
+        // extra settings for settings.mapping:
+        //   maxSaccadeLength      - maximum progressing saccade length, in pixels
+        reading: 1
     };
 
     GazeTargets.mapping.sources = {
@@ -3427,6 +3437,13 @@
         // type-dependent settings
         expanded: {
             expansion: 50
+        },
+        
+        // model-dependent settings
+        models: {
+            reading: {
+                maxSaccadeLength: 250
+            }
         }
     };
 
@@ -3702,9 +3719,11 @@
         mapping: {          // mapping setting for all targets; accepts:
                             //  - 'type' and 'sources', see below
                             //  - the keys from GazeTargets.mapping.settings.[TYPE]
-                            //    (see comments to the corresponding type in GazeTargets.mapping)
-            type: GazeTargets.mapping.types.naive,    // mapping type, see GazeTargets.mapping
+                            //  - the keys from GazeTargets.mapping.settings.[MODEL]
+                            //    (see comments to the corresponding type and model in GazeTargets.mapping)
+            type: GazeTargets.mapping.types.naive,       // mapping type, see GazeTargets.mapping.types
             source: GazeTargets.mapping.sources.samples, // data source for mapping, see GazeTargets.source
+            model: GazeTargets.mapping.models.none       // mapping model, see GazeTargets.mapping.models
         },
         pointer: {          // gaze pointer settings
             show: true,             // boolean or a function returning boolean
@@ -4080,9 +4099,10 @@
         // Find the focused target
         var useFix = settings.mapping.source == GazeTargets.mapping.sources.fixations && fixdet.currentFix;
         var mappingX = useFix ? fixdet.currentFix.x : point.x,
-            mappingY = useFix ? fixdet.currentFix.y : point.y;
+            mappingY = useFix ? fixdet.currentFix.y : point.y,
+            fixationDuration = useFix ? fixdet.currentFix.duration : 0;
         
-        var mappingResult = mapper.feed(targets.items(), mappingX, mappingY);
+        var mappingResult = mapper.feed(targets.items(), mappingX, mappingY, fixationDuration);
         if (progress && mappingResult.isNewFocused) {
             progress.moveTo(mappingResult.focused);
         }
@@ -4185,6 +4205,8 @@
                 utils.extend(true, true, settings.mapping, GazeTargets.mapping.settings.expanded);
                 break;
         }
+        
+        utils.extend(true, true, settings.mapping, GazeTargets.mapping.settings.models);
         
         reqComp = createScrollerSettings();
         utils.extend(true, requiredComponents, reqComp);
@@ -4370,42 +4392,65 @@
 // Mapping routine
 // 
 // Require objects in GazeTargets:
-// 	    mapping.types
-// 	    events: { focused, left }
+//         mapping.types
+//      mapping.models
+//         events: { focused, left }
 
 (function (root) {
 
     'use strict';
 
     var Mapper = {
-    	init: function (_settings, _isTargetDisabled, _targetEvent) {
-    		settings = _settings;
-    		isTargetDisabled = _isTargetDisabled;
-    		targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
-	        
-	        mappingTypes = GazeTargets.mapping.types;
-    	},
+        init: function (_settings, _isTargetDisabled, _targetEvent) {
+            settings = _settings;
+            isTargetDisabled = _isTargetDisabled;
+            targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
+            
+            mappingTypes = GazeTargets.mapping.types;
+            mappingModels = GazeTargets.mapping.models;
 
-    	reset: function () {
-    		focused = null;
+            createModel();
+        },
+
+        reset: function () {
+            model.reset();
+            focused = null;
             lastFocused = null;
-    	},
+        },
 
-    	feed: function (targets, x, y) {
-            var mapped = map(targets, x, y);
-	        var isNewFocused = false;
-	        
+        feed: function (targets, x, y, fixationDuration) {
+            var correctedPoint = model.feed(targets, x, y, fixationDuration);
+            var mapped = map(targets, correctedPoint.x, correctedPoint.y);
+            model.setSelected(mapped);
+
+            var isNewFocused = false;
             if (mapped !== focused) {
                 changeFocus(mapped);
                 isNewFocused = !!focused;
-	        }
+            }
 
-	        return {
-	        	focused: focused,
-	        	lastFocused: lastFocused,
-	        	isNewFocused: isNewFocused
-	        };
-	    }
+            return {
+                focused: focused,
+                lastFocused: lastFocused,
+                isNewFocused: isNewFocused
+            };
+        }
+    };
+
+    var createModel = function () {
+        switch (settings.model) {
+        case mappingModels.reading:
+            model = root.GazeTargets.Models.Reading;
+            model.init(settings.reading);
+            break;
+        default:
+            model = {
+                feed: function (targets, x, y) { return { x: x, y: y }; },
+                setSelected: function () { },
+                reset: function () { }
+            };
+            break;
+        }
     };
 
     var map = function (targets, x, y) {
@@ -4520,6 +4565,9 @@
     var lastFocused = null;
 
     var mappingTypes;
+    var mappingModels;
+
+    var model;
 
     // Publication
     if (!root.GazeTargets) {
@@ -4653,6 +4701,94 @@
     }
 
     root.GazeTargets.Progress = Progress;
+
+})(window);
+// Model for eading
+// 
+// Require objects in GazeTargets:
+//        none
+
+(function (root) {
+
+    'use strict';
+
+    var Reading = {
+        init: function (_settings) {
+            settings = _settings;
+        },
+
+        feed: function (targets, x, y, fixationDuration) {
+
+            var newFixation = false;
+            if (prevFixDuration > fixationDuration) {
+                prevFixX = lastX;
+                prevFixY = lastY;
+                newFixation = true;
+            }
+
+            prevFixDuration = fixationDuration;
+
+            lastX = x;
+            lastY = y;
+
+            if (newFixation) {
+                var dx = x - prevFixX;
+                var dy = y - prevFixY;
+                var saccade = Math.sqrt(dx * dx + dy * dy);
+
+                isReadingFixation = saccade <= settings.maxSaccadeLength && 
+                    dx > Math.abs(dy);
+
+                if (!isReadingFixation) {
+                    yOffset = 0;
+                }
+                //console.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
+            }
+
+            return {x: x, y: y + yOffset};
+        },
+
+        setSelected: function (target) {
+            if (target && isReadingFixation) {
+                var rect = target.getBoundingClientRect();
+                yOffset = (rect.top + rect.height / 2) - lastY;
+            }
+            else {
+                yOffset = 0;
+            }
+        },
+
+        reset: function (target) {
+            yOffset = 0;
+            lastX = -1000;
+            lastY = -1000;
+            prevFixX = -1000;
+            prevFixY = -1000;
+            prevFixDuration = 0;
+            isReadingFixation = false;
+        }
+    };
+
+    // internal
+    var settings;
+    var yOffset;
+    var lastX;
+    var lastY;
+    var prevFixX;
+    var prevFixY;
+    var prevFixDuration;
+    var isReadingFixation;
+
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    if (!root.GazeTargets.Models) {
+        root.GazeTargets.Models = {};
+    }
+
+    root.GazeTargets.Models.Reading = Reading;
 
 })(window);
 (function (root) {
@@ -4876,34 +5012,34 @@
 // Mapping routine
 // 
 // Require objects in GazeTargets:
-// 	    selection.types
-// 	    events: { selected }
+//         selection.types
+//         events: { selected }
 
 (function (root) {
 
     'use strict';
 
     var Selector = {
-    	init: function (_settings, _isTargetDisabled, _nodDetector, _chgDetectors, _targetEvent) {
-    		settings = _settings;
-    		isTargetDisabled = _isTargetDisabled;
-    		nodDetector = _nodDetector;
-    		chgDetectors = _chgDetectors;
-    		targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
+        init: function (_settings, _isTargetDisabled, _nodDetector, _chgDetectors, _targetEvent) {
+            settings = _settings;
+            isTargetDisabled = _isTargetDisabled;
+            nodDetector = _nodDetector;
+            chgDetectors = _chgDetectors;
+            targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
 
-    		selectionTypes = GazeTargets.selection.types;
-    	},
+            selectionTypes = GazeTargets.selection.types;
+        },
 
-    	reset: function () {
+        reset: function () {
             selected = null;
-    	},
+        },
 
-    	feed: function (targets, focused, duration) {
-    		var newSelected = detectSelection(targets, focused, duration);
-        	if (newSelected !== selected) {
-        		select(newSelected);
-        	}
-    	}
+        feed: function (targets, focused, duration) {
+            var newSelected = detectSelection(targets, focused, duration);
+            if (newSelected !== selected) {
+                select(newSelected);
+            }
+        }
     };
 
     var detectSelection = function (targets, focused, duration) {
@@ -4914,7 +5050,7 @@
         for (var i = startIndex; i < targets.length; i += 1) {
             var target = i < 0 ? focused : targets[i];
             if (i >= 0 && target === focused) {
-            	continue;
+                continue;
             }
             if (isTargetDisabled(target)) {
                 continue;
@@ -4956,7 +5092,7 @@
         }
 
         return result;
-	};
+    };
 
     var selectCumulativeDwell = function (targets, target, duration, isFocused) {
         var result = false;
@@ -4999,13 +5135,13 @@
         return result;
     };
 
-	var select = function (target) {
+    var select = function (target) {
         if (selected) {
             selected.gaze.selected = false;
         }
 
         if (target) {
-        	var gazeObj = target.gaze;
+            var gazeObj = target.gaze;
             gazeObj.selected = true;
             if (gazeObj.selection.className) {
                 target.classList.add(gazeObj.selection.className);
@@ -5030,7 +5166,7 @@
         }
 
         selected = target;
-	};
+    };
 
     var settings;
     var isTargetDisabled;
@@ -5153,42 +5289,42 @@
     'use strict';
 
     var Targets = {
-    	init: function (_settings, _keyboards) {
-    		settings = _settings;
-    		keyboards = _keyboards;
-    	},
-    	items: function () {
-    		return items;
-    	},
-    	update: function (kbd, scrollerItems) {
-	        items = [];
-	        var ts, elems, i;
-	        
-	        for (var idx in settings) {
-	            ts = settings[idx];
-	            elems = document.querySelectorAll(ts.selector);
-	            for (i = 0; i < elems.length; i += 1) {
-	                add(elems[i], ts);
-	            }
-	        }
-	        
-	        if (kbd) {
-	            ts = kbd.keyboard.options;
-	            elems = kbd.keyboard.getDOM().querySelectorAll(kbd.selector);
-	            for (i = 0; i < elems.length; i += 1) {
-	                add(elems[i], ts);
-	            }
-	        }
-	        
-	        for (var target in scrollerItems) {
-	            ts = scrollerItems[target];
-	            elems = document.querySelectorAll(ts.selector);
-	            for (i = 0; i < elems.length; i += 1) {
-	                add(elems[i], ts);
-	            }
-	        }
-    	},
-    	reset: function () {
+        init: function (_settings, _keyboards) {
+            settings = _settings;
+            keyboards = _keyboards;
+        },
+        items: function () {
+            return items;
+        },
+        update: function (kbd, scrollerItems) {
+            items = [];
+            var ts, elems, i;
+            
+            for (var idx in settings) {
+                ts = settings[idx];
+                elems = document.querySelectorAll(ts.selector);
+                for (i = 0; i < elems.length; i += 1) {
+                    add(elems[i], ts);
+                }
+            }
+            
+            if (kbd) {
+                ts = kbd.keyboard.options;
+                elems = kbd.keyboard.getDOM().querySelectorAll(kbd.selector);
+                for (i = 0; i < elems.length; i += 1) {
+                    add(elems[i], ts);
+                }
+            }
+            
+            for (var target in scrollerItems) {
+                ts = scrollerItems[target];
+                elems = document.querySelectorAll(ts.selector);
+                for (i = 0; i < elems.length; i += 1) {
+                    add(elems[i], ts);
+                }
+            }
+        },
+        reset: function () {
             for (var i = 0; i < items.length; i += 1) {
                 var item = items[i];
                 var gaze = item.gaze;
@@ -5198,7 +5334,7 @@
                     item.classList.remove(gaze.mapping.className);
                 }
             }
-    	}
+        }
     };
 
     var add = function (elem, settings) {
