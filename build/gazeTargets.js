@@ -1991,12 +1991,12 @@
         panel.setLabel(stateLabel.connected);
         panel.setIsConnected(true);
         panel.update(state);
-        
+        /*
         setTimeout(function () {
             if (defaultDevice && !(currentStateFlags & stateFlags.tracking)) {
                 send(request.setDevice + ' ' + defaultDevice);
             }
-        }, 200);
+        }, 200); */
     };
 
     var onWebSocketClose = function (evt) {
@@ -3922,6 +3922,8 @@
             };
         }
         targets.update(keyboardTargets, settings.scroller.targets);
+        mapper.setTargets(targets.items());
+        selector.setTargets(targets.items()); 
     };
 
     // Triggers calibration of a custom head gesture detector
@@ -4101,7 +4103,7 @@
             mappingY = useFix ? fixdet.currentFix.y : point.y,
             fixationDuration = useFix ? fixdet.currentFix.duration : 0;
         
-        var mappingResult = mapper.feed(targets.items(), mappingX, mappingY, fixationDuration);
+        var mappingResult = mapper.feed(mappingX, mappingY, fixationDuration);
         if (progress && mappingResult.isNewFocused) {
             progress.moveTo(mappingResult.focused);
         }
@@ -4111,7 +4113,7 @@
             utilizeEyeCameraPoints(mappingResult.focused, ts, point, pupil, ec);
         }
         
-        selector.feed(targets.items(), mappingResult.focused, lastSample ? ts - lastSample.ts : 0);
+        selector.feed(mappingResult.focused, lastSample ? ts - lastSample.ts : 0);
         
         // Finally, update dwell-time progress and gaze pointer
         if (mappingResult.lastFocused && progress) {
@@ -4417,9 +4419,14 @@
             lastFocused = null;
         },
 
-        feed: function (targets, x, y, fixationDuration) {
-            var correctedPoint = model.feed(targets, x, y, fixationDuration);
-            var mapped = map(targets, correctedPoint.x, correctedPoint.y);
+        setTargets: function (_targets) {
+            targets = _targets;
+            model.setTargets(_targets);
+        },
+
+        feed: function (x, y, fixationDuration) {
+            var correctedPoint = model.feed(x, y, fixationDuration);
+            var mapped = map(correctedPoint.x, correctedPoint.y);
             model.setSelected(mapped);
 
             var isNewFocused = false;
@@ -4444,7 +4451,8 @@
             break;
         default:
             model = {
-                feed: function (targets, x, y) { return { x: x, y: y }; },
+                setTargets:  function () { },
+                feed: function (x, y) { return { x: x, y: y }; },
                 setSelected: function () { },
                 reset: function () { }
             };
@@ -4452,15 +4460,19 @@
         }
     };
 
-    var map = function (targets, x, y) {
+    var map = function (x, y) {
+        if (!targets) {
+            return null;
+        }
+        
         var mapped = null;
 
         switch (settings.type) {
         case mappingTypes.naive:
-            mapped = mapNaive(targets, x, y);
+            mapped = mapNaive(x, y);
             break;
         case mappingTypes.expanded:
-            mapped = mapExpanded(targets, x, y);
+            mapped = mapExpanded(x, y);
             break;
         default:
             break;
@@ -4469,7 +4481,7 @@
         return mapped;
     };
 
-    var mapNaive = function (targets, x, y) {
+    var mapNaive = function (x, y) {
         var mapped = null;
         var i;
         for (i = 0; i < targets.length; i += 1) {
@@ -4493,7 +4505,7 @@
         return mapped;
     };
 
-    var mapExpanded = function (targets, x, y) {
+    var mapExpanded = function (x, y) {
         var mapped = null;
         var i;
         var minDist = Number.MAX_VALUE;
@@ -4557,6 +4569,7 @@
 
 
     var settings;
+    var targets;
     var isTargetDisabled;
     var targetEvent;
 
@@ -4712,11 +4725,40 @@
     'use strict';
 
     var Reading = {
+
+        // Initializes the model
+        // Arguments:
+        //  _settings: {                - settings:
+        //      maxSaccadeLength            maximum progressive saccade length
+        //      maxSaccadeAngleRatio        maximum progressive saccade |dy|/dx ration
         init: function (_settings) {
             settings = _settings;
         },
 
-        feed: function (targets, x, y, fixationDuration) {
+        // Reconstructs the text geometry
+        // Arguments:
+        //  targets:   array of DOM elements
+        setTargets: function (targets) {
+            lines = [];
+            
+            var lineY = 0;
+            var currentLine = null;
+            targets.forEach(function (elem) {
+                var rect = elem.getBoundingClientRect();
+                if (lineY != rect.top || !currentLine) {
+                    currentLine = createLine(rect);
+                    lines.push(currentLine);
+                    lineY = rect.top;
+                }
+                else {
+                    currentLine.addWord(rect);
+                }
+
+                console.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
+            });
+        },
+
+        feed: function (x, y, fixationDuration) {
 
             var newFixation = false;
             if (prevFixDuration > fixationDuration) {
@@ -4731,6 +4773,7 @@
             lastY = y;
 
             if (newFixation) {
+                console.log(x, y);
                 var dx = x - prevFixX;
                 var dy = y - prevFixY;
                 var saccade = Math.sqrt(dx * dx + dy * dy);
@@ -4770,6 +4813,8 @@
 
     // internal
     var settings;
+    var lines;
+
     var yOffset;
     var lastX;
     var lastY;
@@ -4777,6 +4822,24 @@
     var prevFixY;
     var prevFixDuration;
     var isReadingFixation;
+
+    function createLine(rect) {
+        return {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            words: [rect],
+
+            addWord: function (rect) {
+                this.right = rect.right;
+                if (this.bottom < rect.bottom) {
+                    this.bottom = rect.bottom;
+                }
+                this.words.push(rect);
+            }
+        };
+    }
 
     // Publication
     if (!root.GazeTargets) {
@@ -5029,19 +5092,23 @@
             selectionTypes = GazeTargets.selection.types;
         },
 
+        setTargets: function (_targets) {
+            targets = _targets;
+        },
+
         reset: function () {
             selected = null;
         },
 
-        feed: function (targets, focused, duration) {
-            var newSelected = detectSelection(targets, focused, duration);
+        feed: function (focused, duration) {
+            var newSelected = detectSelection(focused, duration);
             if (newSelected !== selected) {
                 select(newSelected);
             }
         }
     };
 
-    var detectSelection = function (targets, focused, duration) {
+    var detectSelection = function (focused, duration) {
         var result = null;
         
         // check the focused target first, if exists
@@ -5058,14 +5125,14 @@
             switch (target.gaze.selection.type) {
             case selectionTypes.cumulativeDwell:
                 if (duration) {
-                    if (selectCumulativeDwell(targets, target, duration, target === focused)) {
+                    if (selectCumulativeDwell(target, duration, target === focused)) {
                         result = target;
                     }
                 }
                 break;
             case selectionTypes.simpleDwell:
                 if (/*fixdet.currentFix && */duration) {
-                    if (selectSimpleDwell(targets, target, duration, target === focused)) {
+                    if (selectSimpleDwell(target, duration, target === focused)) {
                         result = target;
                     }
                 }
@@ -5093,7 +5160,7 @@
         return result;
     };
 
-    var selectCumulativeDwell = function (targets, target, duration, isFocused) {
+    var selectCumulativeDwell = function (target, duration, isFocused) {
         var result = false;
         if (isFocused) {
             target.gaze.attention += duration;
@@ -5113,7 +5180,7 @@
         return result;
     };
 
-    var selectSimpleDwell = function (targets, target, duration, isFocused) {
+    var selectSimpleDwell = function (target, duration, isFocused) {
         var result = false;
         if (isFocused) {
             target.gaze.attention += duration;
@@ -5168,6 +5235,7 @@
     };
 
     var settings;
+    var targets;
     var isTargetDisabled;
     var nodDetector;
     var chgDetectors;
@@ -5292,9 +5360,11 @@
             settings = _settings;
             keyboards = _keyboards;
         },
+
         items: function () {
             return items;
         },
+        
         update: function (kbd, scrollerItems) {
             items = [];
             var ts, elems, i;

@@ -147,12 +147,12 @@
         panel.setLabel(stateLabel.connected);
         panel.setIsConnected(true);
         panel.update(state);
-        
+        /*
         setTimeout(function () {
             if (defaultDevice && !(currentStateFlags & stateFlags.tracking)) {
                 send(request.setDevice + ' ' + defaultDevice);
             }
-        }, 200);
+        }, 200); */
     };
 
     var onWebSocketClose = function (evt) {

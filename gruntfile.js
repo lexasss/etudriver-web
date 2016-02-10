@@ -91,7 +91,8 @@ module.exports = function(grunt) {
                     console: true,
                     module: true
                 },
-                multistr: true
+                multistr: true,
+                eqnull: true
             }
         },
         

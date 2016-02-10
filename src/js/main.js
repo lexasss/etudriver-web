@@ -556,6 +556,8 @@
             };
         }
         targets.update(keyboardTargets, settings.scroller.targets);
+        mapper.setTargets(targets.items());
+        selector.setTargets(targets.items()); 
     };
 
     // Triggers calibration of a custom head gesture detector
@@ -735,7 +737,7 @@
             mappingY = useFix ? fixdet.currentFix.y : point.y,
             fixationDuration = useFix ? fixdet.currentFix.duration : 0;
         
-        var mappingResult = mapper.feed(targets.items(), mappingX, mappingY, fixationDuration);
+        var mappingResult = mapper.feed(mappingX, mappingY, fixationDuration);
         if (progress && mappingResult.isNewFocused) {
             progress.moveTo(mappingResult.focused);
         }
@@ -745,7 +747,7 @@
             utilizeEyeCameraPoints(mappingResult.focused, ts, point, pupil, ec);
         }
         
-        selector.feed(targets.items(), mappingResult.focused, lastSample ? ts - lastSample.ts : 0);
+        selector.feed(mappingResult.focused, lastSample ? ts - lastSample.ts : 0);
         
         // Finally, update dwell-time progress and gaze pointer
         if (mappingResult.lastFocused && progress) {

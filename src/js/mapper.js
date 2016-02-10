@@ -27,9 +27,14 @@
             lastFocused = null;
         },
 
-        feed: function (targets, x, y, fixationDuration) {
-            var correctedPoint = model.feed(targets, x, y, fixationDuration);
-            var mapped = map(targets, correctedPoint.x, correctedPoint.y);
+        setTargets: function (_targets) {
+            targets = _targets;
+            model.setTargets(_targets);
+        },
+
+        feed: function (x, y, fixationDuration) {
+            var correctedPoint = model.feed(x, y, fixationDuration);
+            var mapped = map(correctedPoint.x, correctedPoint.y);
             model.setSelected(mapped);
 
             var isNewFocused = false;
@@ -54,7 +59,8 @@
             break;
         default:
             model = {
-                feed: function (targets, x, y) { return { x: x, y: y }; },
+                setTargets:  function () { },
+                feed: function (x, y) { return { x: x, y: y }; },
                 setSelected: function () { },
                 reset: function () { }
             };
@@ -62,15 +68,19 @@
         }
     };
 
-    var map = function (targets, x, y) {
+    var map = function (x, y) {
+        if (!targets) {
+            return null;
+        }
+        
         var mapped = null;
 
         switch (settings.type) {
         case mappingTypes.naive:
-            mapped = mapNaive(targets, x, y);
+            mapped = mapNaive(x, y);
             break;
         case mappingTypes.expanded:
-            mapped = mapExpanded(targets, x, y);
+            mapped = mapExpanded(x, y);
             break;
         default:
             break;
@@ -79,7 +89,7 @@
         return mapped;
     };
 
-    var mapNaive = function (targets, x, y) {
+    var mapNaive = function (x, y) {
         var mapped = null;
         var i;
         for (i = 0; i < targets.length; i += 1) {
@@ -103,7 +113,7 @@
         return mapped;
     };
 
-    var mapExpanded = function (targets, x, y) {
+    var mapExpanded = function (x, y) {
         var mapped = null;
         var i;
         var minDist = Number.MAX_VALUE;
@@ -167,6 +177,7 @@
 
 
     var settings;
+    var targets;
     var isTargetDisabled;
     var targetEvent;
 

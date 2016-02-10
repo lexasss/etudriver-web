@@ -9,9 +9,11 @@
             settings = _settings;
             keyboards = _keyboards;
         },
+
         items: function () {
             return items;
         },
+        
         update: function (kbd, scrollerItems) {
             items = [];
             var ts, elems, i;

@@ -19,19 +19,23 @@
             selectionTypes = GazeTargets.selection.types;
         },
 
+        setTargets: function (_targets) {
+            targets = _targets;
+        },
+
         reset: function () {
             selected = null;
         },
 
-        feed: function (targets, focused, duration) {
-            var newSelected = detectSelection(targets, focused, duration);
+        feed: function (focused, duration) {
+            var newSelected = detectSelection(focused, duration);
             if (newSelected !== selected) {
                 select(newSelected);
             }
         }
     };
 
-    var detectSelection = function (targets, focused, duration) {
+    var detectSelection = function (focused, duration) {
         var result = null;
         
         // check the focused target first, if exists
@@ -48,14 +52,14 @@
             switch (target.gaze.selection.type) {
             case selectionTypes.cumulativeDwell:
                 if (duration) {
-                    if (selectCumulativeDwell(targets, target, duration, target === focused)) {
+                    if (selectCumulativeDwell(target, duration, target === focused)) {
                         result = target;
                     }
                 }
                 break;
             case selectionTypes.simpleDwell:
                 if (/*fixdet.currentFix && */duration) {
-                    if (selectSimpleDwell(targets, target, duration, target === focused)) {
+                    if (selectSimpleDwell(target, duration, target === focused)) {
                         result = target;
                     }
                 }
@@ -83,7 +87,7 @@
         return result;
     };
 
-    var selectCumulativeDwell = function (targets, target, duration, isFocused) {
+    var selectCumulativeDwell = function (target, duration, isFocused) {
         var result = false;
         if (isFocused) {
             target.gaze.attention += duration;
@@ -103,7 +107,7 @@
         return result;
     };
 
-    var selectSimpleDwell = function (targets, target, duration, isFocused) {
+    var selectSimpleDwell = function (target, duration, isFocused) {
         var result = false;
         if (isFocused) {
             target.gaze.attention += duration;
@@ -158,6 +162,7 @@
     };
 
     var settings;
+    var targets;
     var isTargetDisabled;
     var nodDetector;
     var chgDetectors;
