@@ -1,5 +1,5 @@
 .gt-scroller {
-    box-shadow: 0 0 5px grey;
+    box-shadow: 0 0 5px #888888;
     position: fixed;
     width: 100%;
 }

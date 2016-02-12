@@ -19,18 +19,39 @@ if (window.QUnit) {
             });
             this.run = function (layout, fixations) {
                 
-                this.reading.setTargets(layout);
-                
-                var i, fixation;
+                var allCorrect = true;
+                var errY = 0;
 
                 this.reading.reset();
                 console.log('---- testing --------');
-                for (i = 0; i < fixations.length; i++) {
-                    fixation = fixations[i];
-                    this.reading.feed(fixation.x, fixation.y);
+
+                for (var i = 0; i < fixations.length; i++) {
+                    
+                    var fixation = fixations[i];
+                    var mapped = null;
+
+                    // simulate non-linearity
+                    fixation.x += Math.random() * 20;
+                    if (i > 0) {
+                        if (fixations[i - 1].x > fixation.x) {   // line break
+                            errY = Math.random() * 30 - 10;
+                        }
+                        else {
+                            errY += Math.random() * 10 - 7;
+                        }
+                        fixation.y += errY;
+                    }
+                    
+                    for (j = 0; j < 5; ++j)
+                    {
+                        mapped = this.reading.feed(layout, fixation.x, fixation.y, 50 * j);
+                    }
+
+                    console.log('result: ' + (mapped ? mapped.rect.left : '-----------------------'));
+                    allCorrect = allCorrect && (mapped ? (mapped.rect.left < fixation.x && fixation.x < mapped.rect.right) : false);
                 }
 
-                return true;
+                return allCorrect;
             };
         },
         afterEach: function() {

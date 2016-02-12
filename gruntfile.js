@@ -97,6 +97,9 @@ module.exports = function(grunt) {
         },
         
         csslint: {
+            options: {
+                ids: false
+            },
             main: {
                 src: 'src/css/**/*.css'
             }
@@ -114,7 +117,7 @@ module.exports = function(grunt) {
 
     //grunt.registerTask('less', ['less']);
     grunt.registerTask('ver', ['copy:versionize']);
-    grunt.registerTask('inspect', ['jshint', 'csslint']);
+    grunt.registerTask('check', ['jshint', 'csslint']);
     grunt.registerTask('min', ['uglify', 'csso']);
     grunt.registerTask('default', ['concat', 'autoprefixer', 'copy:media']);
     grunt.registerTask('full', ['concat', 'autoprefixer', 'copy', 'uglify', 'csso']);

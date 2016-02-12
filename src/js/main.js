@@ -44,16 +44,11 @@
         
         // mapping is based on the extended size of targets
         // extra settings for settings.mapping are listed in GazeTargets.mapping.settings.expanded
-        expanded: 2
-    };
-
-    GazeTargets.mapping.models = {
-        // no model
-        none: 0,
+        expanded: 2,
         
         // tries to follow the reading lines
-        // extra settings for settings.mapping are listed in GazeTargets.mapping.settings.models.reading
-        reading: 1
+        // extra settings for settings.mapping are listed in GazeTargets.mapping.settings.reading
+        reading: 3
     };
 
     GazeTargets.mapping.sources = {
@@ -67,16 +62,16 @@
         },
         
         // type-dependent settings
+
+        // expanded mapping
         expanded: {
             expansion: 50       // expansion size in pixels
         },
         
-        // model-dependent settings
-        models: {
-            reading: {
-                maxSaccadeLength: 250,      // maximum progressing saccade length, in pixels
-                maxSaccadeAngleRatio: 0.7   // |sacc.y| / sacc.dx
-            }
+        // reading mapping
+        reading: {
+            maxSaccadeLength: 250,      // maximum progressing saccade length, in pixels
+            maxSaccadeAngleRatio: 0.7   // |sacc.y| / sacc.dx
         }
     };
 
@@ -352,11 +347,9 @@
         mapping: {          // mapping setting for all targets; accepts:
                             //  - 'type' and 'sources', see below
                             //  - the keys from GazeTargets.mapping.settings.[TYPE]
-                            //  - the keys from GazeTargets.mapping.settings.[MODEL]
-                            //    (see comments to the corresponding type and model in GazeTargets.mapping)
+                            //    (see comments to the corresponding type in GazeTargets.mapping)
             type: GazeTargets.mapping.types.naive,       // mapping type, see GazeTargets.mapping.types
-            source: GazeTargets.mapping.sources.samples, // data source for mapping, see GazeTargets.source
-            model: GazeTargets.mapping.models.none       // mapping model, see GazeTargets.mapping.models
+            source: GazeTargets.mapping.sources.samples  // data source for mapping, see GazeTargets.source
         },
         pointer: {          // gaze pointer settings
             show: true,             // boolean or a function returning boolean
@@ -835,13 +828,7 @@
             utils.extend(true, requiredComponents, reqComp);
         }
 
-        switch (settings.mapping.type) {
-            case GazeTargets.mapping.types.expanded:    
-                utils.extend(true, true, settings.mapping, GazeTargets.mapping.settings.expanded);
-                break;
-        }
-        
-        utils.extend(true, true, settings.mapping, GazeTargets.mapping.settings.models);
+        utils.extend(true, true, settings.mapping, GazeTargets.mapping.settings);
         
         reqComp = createScrollerSettings();
         utils.extend(true, requiredComponents, reqComp);

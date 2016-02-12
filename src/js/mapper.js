@@ -16,7 +16,6 @@
             targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
             
             mappingTypes = GazeTargets.mapping.types;
-            mappingModels = GazeTargets.mapping.models;
 
             createModel();
         },
@@ -29,13 +28,24 @@
 
         setTargets: function (_targets) {
             targets = _targets;
-            model.setTargets(_targets);
         },
 
         feed: function (x, y, fixationDuration) {
-            var correctedPoint = model.feed(x, y, fixationDuration);
-            var mapped = map(correctedPoint.x, correctedPoint.y);
-            model.setSelected(mapped);
+
+            var mapped = null;
+
+            if (targets) {
+                var activeTargets = [];
+                for (var i = 0; i < targets.length; i += 1) {
+                    var target = targets[i];
+                    if (isTargetDisabled(target)) {
+                        continue;
+                    }
+                    activeTargets.push(target);
+                }
+
+                mapped = model.feed(activeTargets, x, y, fixationDuration);
+            }
 
             var isNewFocused = false;
             if (mapped !== focused) {
@@ -46,28 +56,36 @@
             return {
                 focused: focused,
                 lastFocused: lastFocused,
-                isNewFocused: isNewFocused
+                isNewFocused: isNewFocused,
             };
         }
     };
 
     var createModel = function () {
-        switch (settings.model) {
-        case mappingModels.reading:
+        switch (settings.type) {
+        case mappingTypes.naive:
+            model = root.GazeTargets.Models.Naive;
+            model.init(settings.naive);
+            break;
+        case mappingTypes.expanded:
+            model = root.GazeTargets.Models.Expanded;
+            model.init(settings.expanded);
+            break;
+        case mappingTypes.reading:
             model = root.GazeTargets.Models.Reading;
             model.init(settings.reading);
             break;
         default:
             model = {
-                setTargets:  function () { },
-                feed: function (x, y) { return { x: x, y: y }; },
-                setSelected: function () { },
+                init: function () { },
+                feed: function (targets, x, y) { return null; },
                 reset: function () { }
             };
             break;
         }
     };
 
+/*
     var map = function (x, y) {
         if (!targets) {
             return null;
@@ -138,7 +156,7 @@
             }
         }
         return mapped;
-    };
+    };*/
 
     var changeFocus = function (mapped) {
         var event;
@@ -185,7 +203,6 @@
     var lastFocused = null;
 
     var mappingTypes;
-    var mappingModels;
 
     var model;
 
