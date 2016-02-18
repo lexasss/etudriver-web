@@ -1,0 +1,48 @@
+body {
+  background-color: #CCCCCC;
+  margin: 0;
+  padding: 50pt;
+}
+
+#warning {
+  color: #DDDDDD;
+  font: bold 26pt Arial, sans-serif;
+  padding-top: 40pt;
+  text-align: center;
+  width: 100%;
+}
+
+.hidden {
+  display: none;
+}
+
+.readingText {
+  background-color: #FFFFFF;
+  color: #555555;
+  font-size: 18pt;
+  font-weight: bold;
+  line-height: 200%;
+}
+
+.readingText .currentWord {
+  color: #CC0000;
+}
+
+#log {
+  padding-left: 20px;
+  position: absolute;
+  left: 20px;
+  top: 40px;
+}
+
+#log > div {
+  margin: 6px;
+}
+
+.gt-target {
+  border: 1px solid black;
+}
+
+.gt-focused {
+  border-color: tomato;
+}

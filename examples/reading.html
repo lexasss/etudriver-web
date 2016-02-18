@@ -1,0 +1,38 @@
+<html>
+<head>
+    <title>Gaze tracking with ETU-Driver over WebSocket: reading</title>
+    <link rel="stylesheet" href="reading.css">
+    <script type="text/javascript" src="../build/gazeTargets.js"></script>
+</head>
+
+<body>
+    <div id="warning">You need the "ETU-Driver Service" application running <br> with "WebSocket server" flag set on</div>
+    <div id="textContainer" class="readingText">All men have stars, but they are not the same things for different people. For some, who are travelers, the stars are guides. For others they are no more than little lights in the sky. For others, who are scholars, they are problems... But all these stars are silent. You-You alone will have stars as no one else has them... In one of the stars I shall be living. In one of them I shall be laughing. And so it will be as if all the stars will be laughing when you look at the sky at night..You, only you, will have stars that can laugh! And when your sorrow is comforted (time soothes all sorrows) you will be content that you have known me... You will always be my friend. You will want to laugh with me. And you will sometimes open your window, so, for that pleasure... It will be as if, in place of the stars, I had given you a great number of little bells that knew how to laugh.</div>
+
+    <script src="reading.js"></script>
+    <script>
+        var textHighlighter = new Reading.TextHighlighter({
+            root: '#textContainer'
+        });
+
+        var gazeTargetsManager = new Reading.GazeTargetsManager({
+            connected: function() {
+                document.querySelector('#warning').classList.add('hidden');
+            },
+            trackingStarted: function () {
+                textHighlighter.init();
+            },
+            trackingStopped: function () {
+                textHighlighter.reset();
+            },
+            wordFocused: function (word) {
+                textHighlighter.setFocusedWord( word );
+            },
+            wordLeft: function (word) {
+                textHighlighter.setFocusedWord( null );
+            }
+        });
+    </script>
+</body>
+
+</html>

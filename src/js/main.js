@@ -56,6 +56,11 @@
         fixations: 1
     };
 
+    GazeTargets.mapping.readingModel = {
+        simplest: 'Simplest',
+        campbell: 'Campbell'
+    };
+
     GazeTargets.mapping.settings = {
         defaults: {                 // default mapping settings
             className: 'gt-focused'       // this class is added to the focused element
@@ -70,8 +75,24 @@
         
         // reading mapping
         reading: {
-            maxSaccadeLength: 250,      // maximum progressing saccade length, in pixels
-            maxSaccadeAngleRatio: 0.7   // |sacc.y| / sacc.dx
+            commons: {
+                fixedText: false,   // the flag indicates whether the text geometry is fixedl therefore. the geometry model is computed only once resulting in lower computational stress
+            },
+                                        // (fixed text is demanding for CPU power)
+            Simplest: {
+                maxSaccadeLength: 250,      // maximum progressing saccade length, in pixels
+                maxSaccadeAngleRatio: 0.7,  // |sacc.y| / sacc.dx
+            },
+            Campbell: {
+                forgettingFactor: 0.2,
+                readingThreshold: 4,        // number of fixations
+                nonreadingThreshold: 2,     // number of fixations
+                slope: 0.15,
+                progressiveLeft: -1.5,      // em
+                progressiveRight: 10,       // em
+                readingZoneMarginY: 1,      // em
+                neutralZoneMarginY: 2       // em
+            }
         }
     };
 
@@ -349,7 +370,8 @@
                             //  - the keys from GazeTargets.mapping.settings.[TYPE]
                             //    (see comments to the corresponding type in GazeTargets.mapping)
             type: GazeTargets.mapping.types.naive,       // mapping type, see GazeTargets.mapping.types
-            source: GazeTargets.mapping.sources.samples  // data source for mapping, see GazeTargets.source
+            source: GazeTargets.mapping.sources.samples, // data source for mapping, see GazeTargets.source
+            readingModel: GazeTargets.mapping.readingModel.simplest // reading model for type="reading", see GazeTargets.mapping.readingModel
         },
         pointer: {          // gaze pointer settings
             show: true,             // boolean or a function returning boolean

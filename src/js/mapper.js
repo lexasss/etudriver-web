@@ -1,9 +1,9 @@
 // Mapping routine
 // 
 // Require objects in GazeTargets:
-//         mapping.types
-//      mapping.models
-//         events: { focused, left }
+//      mapping:: { types }
+//      events: { focused, left }
+//      Models: { Naive, Expanded, Reading }
 
 (function (root) {
 
@@ -15,8 +15,6 @@
             isTargetDisabled = _isTargetDisabled;
             targetEvent = (typeof _targetEvent === 'function') ? _targetEvent : null;
             
-            mappingTypes = GazeTargets.mapping.types;
-
             createModel();
         },
 
@@ -62,18 +60,20 @@
     };
 
     var createModel = function () {
+        var types = GazeTargets.mapping.types;
+
         switch (settings.type) {
-        case mappingTypes.naive:
+        case types.naive:
             model = root.GazeTargets.Models.Naive;
             model.init(settings.naive);
             break;
-        case mappingTypes.expanded:
+        case types.expanded:
             model = root.GazeTargets.Models.Expanded;
             model.init(settings.expanded);
             break;
-        case mappingTypes.reading:
-            model = root.GazeTargets.Models.Reading;
-            model.init(settings.reading);
+        case types.reading:
+            model = root.GazeTargets.Models.Reading[ settings.readingModel ];
+            model.init(settings.reading[ settings.readingModel ], settings.reading.commons);
             break;
         default:
             model = {
@@ -84,79 +84,6 @@
             break;
         }
     };
-
-/*
-    var map = function (x, y) {
-        if (!targets) {
-            return null;
-        }
-        
-        var mapped = null;
-
-        switch (settings.type) {
-        case mappingTypes.naive:
-            mapped = mapNaive(x, y);
-            break;
-        case mappingTypes.expanded:
-            mapped = mapExpanded(x, y);
-            break;
-        default:
-            break;
-        }
-
-        return mapped;
-    };
-
-    var mapNaive = function (x, y) {
-        var mapped = null;
-        var i;
-        for (i = 0; i < targets.length; i += 1) {
-            var target = targets[i];
-            if (isTargetDisabled(target)) {
-                continue;
-            }
-            
-            var rect = target.getBoundingClientRect();
-            if (x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom) {
-                if (mapped) {
-                    if (document.elementFromPoint(x, y) === target) {
-                        mapped = target;
-                        break;
-                    }
-                } else {
-                    mapped = target;
-                }
-            }
-        }
-        return mapped;
-    };
-
-    var mapExpanded = function (x, y) {
-        var mapped = null;
-        var i;
-        var minDist = Number.MAX_VALUE;
-        for (i = 0; i < targets.length; i += 1) {
-            var target = targets[i];
-            if (isTargetDisabled(target)) {
-                continue;
-            }
-            
-            var rect = target.getBoundingClientRect();
-            var dx = x < rect.left ? rect.left - x : (x > rect.right ? x - rect.right : 0);
-            var dy = y < rect.top ? rect.top - y : (y > rect.bottom ? y - rect.bottom : 0);
-            var dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < minDist && dist < settings.expansion) {
-                mapped = target;
-                minDist = dist;
-            } else if (dist === 0) {
-                if (document.elementFromPoint(x, y) === target) {
-                    mapped = target;
-                    break;
-                }
-            }
-        }
-        return mapped;
-    };*/
 
     var changeFocus = function (mapped) {
         var event;
@@ -193,7 +120,6 @@
         }
     };
 
-
     var settings;
     var targets;
     var isTargetDisabled;
@@ -201,8 +127,6 @@
 
     var focused = null;
     var lastFocused = null;
-
-    var mappingTypes;
 
     var model;
 

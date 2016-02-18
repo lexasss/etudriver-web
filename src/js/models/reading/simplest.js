@@ -7,15 +7,16 @@
 
     'use strict';
 
-    var Reading = {
+    var Simplest = {
 
         // Initializes the model
         // Arguments:
         //  _settings:                 - settings:
         //      maxSaccadeLength            maximum progressive saccade length
         //      maxSaccadeAngleRatio        maximum progressive saccade |dy|/dx ration
-        init: function (_settings) {
+        init: function (_settings, _commons) {
             settings = _settings;
+            commons = _commons;
         },
 
         feed: function (targets, x, y, fixationDuration) {
@@ -45,7 +46,8 @@
                 isReadingFixation = saccade <= settings.maxSaccadeLength && 
                     Math.abs(dy) / dx <= settings.maxSaccadeAngleRatio;
 
-                if (!isReadingFixation) {
+                var saccadeIndicator = lastMapped ? (lastMapped.line.right - lastMapped.line.left) * 0.5 : 1000000;
+                if (!isReadingFixation || dx < -saccadeIndicator) {
                     yOffset = 0;
                 }
 
@@ -57,7 +59,7 @@
             lastMapped = mapped;
             select(lastMapped);
 
-            return mapped;
+            return mapped ? mapped.dom : null;
         },
 
         reset: function () {
@@ -70,12 +72,15 @@
             isReadingFixation = false;
             lastMapped = null;
             lineSpacing = 0;
+            lines.length = 0;
         }
     };
 
     // internal
     var settings;
-    var lines;
+    var commons;
+
+    var lines = [];
     var lineSpacing;
     var lastMapped;
 
@@ -88,7 +93,12 @@
     var isReadingFixation;
 
     function obtainGeometry(targets) {
-        lines = [];
+
+        if (commons.fixedText && lines.length > 0) {
+            return;
+        }
+
+        lines.length = 0;
         lineSpacing = 0;
         
         var lineY = 0;
@@ -122,7 +132,7 @@
     }
 
     function createLine(rect, target) {
-        return {
+        var line = {
             left: rect.left,
             top: rect.top,
             right: rect.right,
@@ -139,10 +149,15 @@
                 }
                 this.words.push({
                     rect: rect,
-                    dom: target
+                    dom: target,
+                    line: this
                 });
             }
         };
+
+        line.words[0].line = line;
+
+        return line;
     }
 
     function map(x, y) {
@@ -160,7 +175,7 @@
                 var dy = y < rect.top ? rect.top - y : (y > rect.bottom ? y - rect.bottom : 0);
                 var dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < minDist) {
-                    result = word.dom;
+                    result = word;
                     minDist = dist;
                     if (dist === 0) {
                         i = lines.length;
@@ -173,9 +188,9 @@
         return minDist < lineSpacing ? result : null;
     }
 
-    function select(target) {
-        if (target && isReadingFixation) {
-            var rect = target.getBoundingClientRect();
+    function select(word) {
+        if (word && isReadingFixation) {
+            var rect = word.dom.getBoundingClientRect();
             yOffset = (rect.top + rect.height / 2) - lastY;
         }
         else {
@@ -192,6 +207,10 @@
         root.GazeTargets.Models = {};
     }
 
-    root.GazeTargets.Models.Reading = Reading;
+    if (!root.GazeTargets.Models.Reading) {
+        root.GazeTargets.Models.Reading = {};
+    }
+
+    root.GazeTargets.Models.Reading.Simplest = Simplest;
 
 })(window);

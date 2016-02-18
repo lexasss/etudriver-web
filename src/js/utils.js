@@ -392,7 +392,7 @@
                         }
 
                         // Never move original objects, clone them
-                        target[ name ] = Utils.extend( deep, clone, copy );
+                        target[ name ] = Utils.extend( deep, onlyIfUndefined, clone, copy );
 
                     // Don't bring in undefined values
                     } else if ( copy !== undefined ) {
