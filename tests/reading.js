@@ -15,11 +15,31 @@ if (window.QUnit) {
 
     var GeomLine = window.GazeTargets.Models.Reading.Geometry.Line;
     var GeomWord = window.GazeTargets.Models.Reading.Geometry.Word;
+    var Fixation = window.GazeTargets.Models.Reading.Fixation;
 
     function randomInRange(min, max) {
         return Math.random() * (max - min) + min;
     }
     
+    var createProperLayot = function(layout) {
+        var line = null;
+        var words = layout.map( function(word) {
+            if (!line) {
+                line = new GeomLine(word);
+            }
+
+            if (line.top != word.top) {
+                line = new GeomLine(word);
+            }
+            else {
+                line.add(word);
+            }
+
+            return line.words[line.words.length - 1];
+        });
+        return words;
+    }
+
     var layout = [
         new Word({ left: 67, top: 151, right: 99, bottom: 179 }),
         new Word({ left: 105, top: 151, right: 155, bottom: 179 }),
@@ -485,38 +505,108 @@ if (window.QUnit) {
     });
 
     QUnit.test( 'NewLineDetector', function( assert ) {
-
-        var createProperLayot = function(layout) {
-            var line = null;
-            var words = layout.map( function(word) {
-                if (!line) {
-                    line = new GeomLine(word);
-                }
-
-                if (line.top != word.top) {
-                    line = new GeomLine(word);
-                }
-                else {
-                    line.add(word);
-                }
-
-                return line.words[line.words.length - 1];
-            });
-            return words;
-        }
-
         assert.equal( this.run( createProperLayot( layout ) ), 9, 'just following word left-top rect location' );
         assert.equal( this.run( createProperLayot( layout ), function (fix, word) {
             fix.x += randomInRange(-10, 10);
-            fix.y += randomInRange(-10, 10) + randomInRange(-0.1, 0.2)  * fix.x;
+            fix.y += randomInRange(-10, 10) + randomInRange(-0.1, 0.1)  * fix.x;
             return fix; 
         } ), 9, 'twisted + randomized' );
     });
-/*
-    QUnit.module( 'Reading', {
+
+    QUnit.module( 'LinePredictor module', {
         beforeEach: function() {
-            this.reading = window.GazeTargets.Models.Reading.Campbell;
-            this.reading.init({
+            this.geometry = window.GazeTargets.Models.Reading.Geometry;
+            this.geometry.reset();
+            this.linePredictor = window.GazeTargets.Models.Reading.LinePredictor;
+            this.linePredictor.reset();
+            this.run = function (geomModel, switched, newLine, fixation ) {
+                
+                var result = 0;
+                this.linePredictor.init( geomModel );
+                console.log('################### LinePredictor ##################');
+
+                return this.linePredictor.get( switched, newLine, fixation );
+            };
+        },
+        afterEach: function() {
+        }
+    });
+
+    QUnit.test( 'LinePredictor', function( assert ) {
+        this.geometry.init(true);
+        var geomModel = this.geometry.create( layout );
+
+        var fixations = data1.map( function (fix, data, index) {
+            var result = new Fixation(
+                fix.x + randomInRange(-10, 10),
+                fix.y + randomInRange(-10, 10) + randomInRange(0.05, 0.1)  * fix.x,
+                250);
+            result.previous = index > 0 ? data[index - 1] : null;
+            return result;
+        });
+
+        // test 1
+        var fixIndex = 5;
+        var fixOnReadingStart = fixations[ fixIndex ];
+        assert.equal( this.run( geomModel, {
+            toReading: true, 
+            toNonReading: false
+        }, null, fixOnReadingStart), geomModel.lines[0], 'reading starts' );
+
+        var fix = fixations[ fixIndex ];
+        while (fix) {
+            fix.word = geomModel.lines[0].words[ fixIndex ];
+            fix = fix.previous;
+            fixIndex--;
+        }
+        
+        // test 2
+        fixIndex = 6;
+        var fixNext = fixations[ fixIndex ];
+        assert.equal( this.run( geomModel, {
+            toReading: false, 
+            toNonReading: false
+        }, null, fixNext), geomModel.lines[0], 'reading continues' );
+
+        fixNext.word = geomModel.lines[0].words[ fixIndex ];
+        fix = fixations[ 17 ];
+        while (fix && fix != fixNext) {
+            fix.word = geomModel.lines[0].words[ fixIndex ];
+            fix = fix.previous;
+            fixIndex--;
+        }
+
+        // test 3
+        fixIndex = 18;
+        var fixFirstOnSecondLine = fixations[ fixIndex ];
+        assert.equal( this.run( geomModel, {
+            toReading: false, 
+            toNonReading: true
+        }, geomModel.lines[1], fixFirstOnSecondLine), geomModel.lines[1], 'reading next line' );
+
+        fixFirstOnSecondLine.word = geomModel.lines[1].words[ 0 ];
+
+        // test 4
+        fixIndex = 19;
+        var fixSecondOnSecondLine = fixations[ fixIndex ];
+        assert.equal( this.run( geomModel, {
+            toReading: false, 
+            toNonReading: true
+        }, null, fixSecondOnSecondLine), null, 'reading ends' );
+
+        // test 5
+        fixIndex = 23;
+        var fixSecondReadingStart = fixations[ fixIndex ];
+        assert.equal( this.run( geomModel, {
+            toReading: true, 
+            toNonReading: false
+        }, null, fixSecondReadingStart), geomModel.lines[1], 'reading starts agains' );
+    });
+
+    QUnit.module( 'Campbell module', {
+        beforeEach: function() {
+            this.campbell = window.GazeTargets.Models.Reading.Campbell;
+            this.campbell.init({
                 forgettingFactor: 0.2,
                 readingThreshold: 4,        // number of fixations
                 nonreadingThreshold: 2,     // number of fixations
@@ -531,10 +621,9 @@ if (window.QUnit) {
             this.run = function (layout, fixations, converter) {
                 
                 var allCorrect = true;
-                var errY = 0;
 
-                this.reading.reset();
-                console.log('#####################################');
+                this.campbell.reset();
+                console.log('################### Campbell ##################');
 
                 for (var i = 0; i < fixations.length; i++) {
                     
@@ -544,9 +633,10 @@ if (window.QUnit) {
                     }
                     var mapped = null;
 
-                    // simulate non-linearity
+                    /* simulate non-linearity
                     fixation.x += Math.random() * 20;
                     if (i > 0) {
+                        var errY = 0;
                         if (fixations[i - 1].x > fixation.x) {   // line break
                             errY = Math.random() * 30 - 10;
                         }
@@ -554,14 +644,14 @@ if (window.QUnit) {
                             errY += Math.random() * 10 - 7;
                         }
                         fixation.y += errY;
-                    }
+                    }*/
                     
                     for (j = 0; j < 2; ++j)
                     {
-                        mapped = this.reading.feed(layout, fixation.x, fixation.y, 250 * j);
+                        mapped = this.campbell.feed(layout, fixation.x, fixation.y, 250 * j);
                     }
 
-                    console.log('result: ' + (mapped ? '##### ' + mapped.rect.left : '-----------------------'));
+                    console.log('result: ' + (mapped ? '##### ' + mapped.left : '-----------------------'));
                     if (i > 3) {
                         allCorrect = allCorrect && mapped;
                     }
@@ -573,11 +663,13 @@ if (window.QUnit) {
         afterEach: function() {
         }
     });
-    */
 
-/*
-    QUnit.test( 'reset, feed', function( assert ) {
+    QUnit.test( 'Campbell', function( assert ) {
         assert.ok( this.run(layout, data1), 'simulated data' );
-        assert.ok( this.run(layout, data2, function (fix) { return {x: fix.x, y: fix.y + 60}; }), 'mouse-collected data' );
-    });*/
+        assert.ok( this.run(layout, data2, function (fix) { 
+            return {
+                x: fix.x, 
+                y: fix.y};
+            }), 'mouse-collected data' );
+    });
 }

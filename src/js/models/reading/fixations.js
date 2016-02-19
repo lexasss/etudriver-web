@@ -11,7 +11,7 @@
 
         init: function () {
             lastFixation = null;
-            currentFixation = new Fixation(-10000, -10000, 1000000);
+            currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
             
             zones = GazeTargets.Models.Reading.Zone;
         },
@@ -37,13 +37,13 @@
         },
 
         reset: function () {
-            /*fixations.forEach(function (value) {
+            fixations.forEach(function (value) {
                 console.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
-            });*/
+            });
             fixations.length = 0;
 
             lastFixation = null;
-            currentFixation = new Fixation(-10000, -10000, 1000000);
+            currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
         },
 
         current: function() {
@@ -91,5 +91,6 @@
     }
 
     root.GazeTargets.Models.Reading.Fixations = Fixations;
+    root.GazeTargets.Models.Reading.Fixation = Fixation;
 
 })(window);

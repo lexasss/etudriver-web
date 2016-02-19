@@ -68,7 +68,7 @@
     function getFirstFixationOnItsLine(currentFixation) {
 
         var previousFixation = currentFixation.previous;
-        if (!previousFixation || !previousFixation.word) {
+        if (!previousFixation || !previousFixation.word) {  // previous fixation should be mapped onto a word
             return null;
         }
 

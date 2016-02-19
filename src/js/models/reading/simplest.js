@@ -46,7 +46,7 @@
                 isReadingFixation = saccade <= settings.maxSaccadeLength && 
                     Math.abs(dy) / dx <= settings.maxSaccadeAngleRatio;
 
-                var saccadeIndicator = lastMapped ? (lastMapped.line.right - lastMapped.line.left) * 0.5 : 1000000;
+                var saccadeIndicator = lastMapped ? (lastMapped.line.right - lastMapped.line.left) * 0.5 : Number.MAX_VALUE;
                 if (!isReadingFixation || dx < -saccadeIndicator) {
                     yOffset = 0;
                 }
@@ -68,7 +68,7 @@
             lastY = -1000;
             prevFixX = -1000;
             prevFixY = -1000;
-            prevFixDuration = 1000000;
+            prevFixDuration = Number.MAX_VALUE;
             isReadingFixation = false;
             lastMapped = null;
             lineSpacing = 0;
