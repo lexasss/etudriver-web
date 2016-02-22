@@ -25,9 +25,13 @@
         },
 
         reset: function () {
-            lines.forEach(function (value) {
-                logger.log('new Word({ left: ' + value.left + ', top: ' + value.top + 
-                    ', right: ' + value.right + ', bottom: ' + value.bottom + ' }),');
+            lines.forEach(function (line) {
+                line.forEach(function (w) {
+                    logger.log('new Word({ left: ' + w.rect.left + 
+                        ', top: ' + w.rect.top + 
+                        ', right: ' + w.rect.right + 
+                        ', bottom: ' + w.rect.bottom + ' }),');
+                });
             });
             lines = [];
             lineSpacing = 0;
@@ -48,7 +52,7 @@
     // internal
     var isTextFixed;
 
-    var lines;
+    var lines = [];
     var lineSpacing;
     var lineHeight;
     var lineWidth;

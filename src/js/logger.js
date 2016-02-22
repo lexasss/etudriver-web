@@ -40,7 +40,7 @@
         },
 
         Level: {
-            silent: 'silient',
+            silent: 'silent',
             debug: 'debug'
         },
 
@@ -52,7 +52,7 @@
     };
 
     // internal
-    var level = Logger.Level.debug;
+    var level = Logger.Level.silent;
     var header = '[GT/R]  ';
 
     // Publication

@@ -38,9 +38,11 @@
         },
 
         reset: function () {
-            fixations.forEach(function (value) {
-                logger.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
-            });
+            // fixations.forEach(function (value) {
+            //     logger.log('{ x: ' + value.x + 
+            //         ', y: ' + value.y + 
+            //         ', d: ' + value.duration + ' },');
+            // });
             fixations.length = 0;
 
             lastFixation = null;
