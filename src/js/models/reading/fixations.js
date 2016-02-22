@@ -14,6 +14,7 @@
             currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
             
             zones = GazeTargets.Models.Reading.Zone;
+            logger = root.GazeTargets.Logger;
         },
 
         feed: function (x, y, duration) {
@@ -38,7 +39,7 @@
 
         reset: function () {
             fixations.forEach(function (value) {
-                console.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
+                logger.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
             });
             fixations.length = 0;
 
@@ -58,6 +59,7 @@
     var currentFixation;
 
     var zones;
+    var logger;
 
     // Fixation
     function Fixation(x, y, duration) {

@@ -20,10 +20,12 @@
             readingMarginY = (settings.readingMarginY || 1.5) * lineHeight;
             neutralMarginY = (settings.neutralMarginY || 3) * lineHeight;
             slope = settings.slope || 0.1;
+
+            logger = root.GazeTargets.Logger;
         },
 
         match: function (saccade) {
-            //console.log('zone search', saccade.x, saccade.y);
+            //logger.log('zone search', saccade.x, saccade.y);
             var zone = this.nonreading;
 
             if (isInsideBox( readingMarginY, saccade)) {
@@ -52,23 +54,25 @@
     var neutralMarginY;
     var slope;
 
+    var logger;
+
     function isInsideProgressive(marginY, saccade)
     {
         var heightDelta = saccade.x * slope;
         var margin = marginY + heightDelta;
-        //console.log('is Inside Progressive?', progressiveLeft, progressiveRight, -margin, margin);
+        //logger.log('is Inside Progressive?', progressiveLeft, progressiveRight, -margin, margin);
         return progressiveLeft < saccade.x && saccade.x < progressiveRight && 
                -margin < saccade.y && saccade.y < margin;
-    };
+    }
 
     function isInsideRegressive(marginY, saccade)
     {
         var heightDelta = -saccade.x * slope;
         var margin = marginY + heightDelta;
-        //console.log('is Inside Regressive?', regressiveLeft, regressiveRight, -margin, margin);
+        //logger.log('is Inside Regressive?', regressiveLeft, regressiveRight, -margin, margin);
         return regressiveLeft < saccade.x && saccade.x < 0 && 
                -margin < saccade.y && saccade.y < margin;
-    };
+    }
 
     function isInsideBox(marginY, saccade)
     {

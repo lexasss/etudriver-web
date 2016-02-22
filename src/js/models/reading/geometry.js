@@ -8,6 +8,8 @@
 
         init: function(_isTextFixed) {
             isTextFixed = _isTextFixed;
+
+            logger = root.GazeTargets.Logger;
         },
 
         create: function (targets) {
@@ -23,6 +25,10 @@
         },
 
         reset: function () {
+            lines.forEach(function (value) {
+                logger.log('new Word({ left: ' + value.left + ', top: ' + value.top + 
+                    ', right: ' + value.right + ', bottom: ' + value.bottom + ' }),');
+            });
             lines = [];
             lineSpacing = 0;
             lineHeight = 0;
@@ -47,6 +53,8 @@
     var lineHeight;
     var lineWidth;
 
+    var logger;
+
     function compute(targets) {
 
         var lineY = 0;
@@ -70,7 +78,7 @@
             else {
                 currentLine.add(rect, target);
             }
-//                console.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
+//                logger.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
         }
 
         if (currentLine) {
@@ -89,7 +97,7 @@
             lineSpacing = 2 * (line.bottom - line.top);
         }
         
-        console.log('geometry model created', lines.length);
+        logger.log('geometry model created', lines.length);
     }
 
     // Line object
@@ -111,7 +119,7 @@
         }
 
         this.words.push(new Word(word, dom, this));
-    }
+    };
 
     // Word object
     function Word(rect, dom, line) {

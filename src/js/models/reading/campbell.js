@@ -32,6 +32,8 @@
             zone = root.GazeTargets.Models.Reading.Zone;
             newLineDetector = root.GazeTargets.Models.Reading.NewLineDetector;
             linePredictor = root.GazeTargets.Models.Reading.LinePredictor;
+
+            logger = root.GazeTargets.Logger;
         },
 
         feed: function (targets, x, y, fixationDuration) {
@@ -56,7 +58,7 @@
                 if (switched.toReading && mapped) {
                     backtrackFixations( newFixation, mapped.line );
                 }
-                //console.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
+                //logger.log('new fix: ' + dx + ',' + dy + ' = ' + saccade + ' : ' + (isReadingFixation ? 'reading' : '-'));
             }
 
             lastMapped = mapped;
@@ -100,6 +102,8 @@
     var currentLine;
     var lastMapped;
 
+    var logger;
+
     function createGeometry(targets) {
         var geomModel = geometry.create(targets);
         if (geomModel) {
@@ -142,16 +146,16 @@
     function updateScores(guessedZone) {
         switch (guessedZone) {
             case zone.reading:
-                console.log('in reading zone');
+                logger.log('in reading zone');
                 scoreReading++;
                 scoreNonReading -= settings.forgettingFactor;
                 break;
             case zone.neutral:
-                console.log('in neutral zone');
+                logger.log('in neutral zone');
                 scoreNonReading++;
                 break;
             default:
-                console.log('in nonreading zone');
+                logger.log('in nonreading zone');
                 scoreNonReading = settings.nonreadingThreshold;
                 scoreReading = 0;
         }
@@ -166,7 +170,7 @@
         var result = {
             toReading: false,
             toNonReading: false
-        }
+        };
 
         if (!isReadingMode && scoreReading === settings.readingThreshold) {
             changeMode(true);
@@ -181,7 +185,7 @@
     }
 
     function changeMode(toReading) {
-        console.log('change Mode', toReading);
+        logger.log('change Mode', toReading);
         isReadingMode = toReading;
     }
 
@@ -192,12 +196,12 @@
     function map(fixation, line) {
 
         if (!isReadingMode) {
-            console.log('map: none');
+            logger.log('map: none');
             return null;
         }
 
         if (!line) {
-            console.log('map: ???');
+            logger.log(logger.Type.error, 'map: ???');
             return null;
         }
 
@@ -220,7 +224,7 @@
             }
         }
 
-        console.log('map: search', minDist);
+        logger.log('map: search', minDist);
         return result;
     }
 

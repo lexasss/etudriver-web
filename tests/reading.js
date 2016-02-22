@@ -281,6 +281,22 @@ if (window.QUnit) {
         { x: 1105, y: 200 },
     ];
 
+    QUnit.module( 'Logger module', {
+        beforeEach: function() {
+            this.logger = window.GazeTargets.Logger;
+            console.log('################### Logger ##################');
+        },
+        afterEach: function() {
+        }
+    });
+
+    QUnit.test( 'Logger', function( assert ) {
+        assert.ok( this.logger.log('just debugging'), 'simple debug' );
+        assert.ok( this.logger.log( this.logger.Type.error, 'this is error'), 'error' );
+        this.logger.level( this.logger.Level.silent );
+        assert.notOk( this.logger.log('hidden text'), 'no logging' );
+    });
+
     QUnit.module( 'Fixations module', {
         beforeEach: function() {
             this.fixations = window.GazeTargets.Models.Reading.Fixations;
@@ -508,7 +524,7 @@ if (window.QUnit) {
         assert.equal( this.run( createProperLayot( layout ) ), 9, 'just following word left-top rect location' );
         assert.equal( this.run( createProperLayot( layout ), function (fix, word) {
             fix.x += randomInRange(-10, 10);
-            fix.y += randomInRange(-10, 10) + randomInRange(-0.1, 0.1)  * fix.x;
+            fix.y += randomInRange(-10, 10) + randomInRange(-0.05, 0.05)  * fix.x;
             return fix; 
         } ), 9, 'twisted + randomized' );
     });
@@ -539,7 +555,7 @@ if (window.QUnit) {
         var fixations = data1.map( function (fix, data, index) {
             var result = new Fixation(
                 fix.x + randomInRange(-10, 10),
-                fix.y + randomInRange(-10, 10) + randomInRange(0.05, 0.1)  * fix.x,
+                fix.y + randomInRange(-10, 10) + randomInRange(0.05, 0.05)  * fix.x,
                 250);
             result.previous = index > 0 ? data[index - 1] : null;
             return result;

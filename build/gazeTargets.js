@@ -4655,7 +4655,7 @@
     root.GazeTargets.Models.Naive = Naive;
 
 })(window);
-// Model for eading
+// Model for reading
 // 
 // Require objects in GazeTargets:
 //        none
@@ -4675,42 +4675,44 @@
         //      slope                   0.1..0.2
         //      progressiveLeft         em
         //      progressiveRight        em
-        //      readingZomeMarginY      em
-        //      neutralZomeMarginY      em
+        //      readingZoneMarginY      em
+        //      neutralZoneMarginY      em
         init: function (_settings, _commons) {
             settings = _settings;
-            commons = _commons;
+
+            geometry = root.GazeTargets.Models.Reading.Geometry;
+            geometry.init(_commons.fixedText);
+
+            fixations = root.GazeTargets.Models.Reading.Fixations;
+            fixations.init();
+
+            zone = root.GazeTargets.Models.Reading.Zone;
+            newLineDetector = root.GazeTargets.Models.Reading.NewLineDetector;
+            linePredictor = root.GazeTargets.Models.Reading.LinePredictor;
         },
 
         feed: function (targets, x, y, fixationDuration) {
 
-            obtainGeometry(targets);
-
-            var newFixation = false;
-            if (prevFixDuration > fixationDuration) {
-                prevFixX = lastX;
-                prevFixY = lastY;
-                newFixation = true;
-            }
-
-            prevFixDuration = fixationDuration;
-
-            lastX = x;
-            lastY = y;
+            createGeometry(targets);
 
             var mapped = lastMapped;
 
+            var newFixation = fixations.feed(x, y + offset, fixationDuration);
             if (newFixation) {
-                currentFixation = new Fixation(x, y);
 
-                var dx = x - prevFixX;
-                var dy = y - prevFixY;
-                updateMode( dx, dy );
+                var newLine = classifySaccadeZone( newFixation );
 
-                mapped = map( currentFixation );
-                currentFixation.word = mapped;
+                var switched = updateMode();
+                currentLine = linePredictor.get( switched, newLine, newFixation);
 
-                fixations.push( currentFixation );
+                updateOffset( newFixation, currentLine );
+
+                mapped = map( newFixation, currentLine );
+                newFixation.word = mapped;
+
+                if (switched.toReading && mapped) {
+                    backtrackFixations( newFixation, mapped.line );
+                }
                 //console.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
             }
 
@@ -4721,70 +4723,349 @@
         },
 
         reset: function () {
-            offsetX = 0;
-            offsetY = 0;
-            lastX = -10000;
-            lastY = -10000;
-            prevFixX = -10000;
-            prevFixY = -10000;
-            prevFixDuration = 1000000;
-            
-            fixations.forEach(function (value) {
-                console.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
-            });
-            fixations.length = 0;
-            lines.length = 0;
-            lineSpacing = 0;
-            lineHeight = 0;
-            lineWidth = 0;
 
-            lastMapped = null;
+            geometry.reset();
+            fixations.reset();
+            zone.reset();
+            newLineDetector.reset();
+            linePredictor.reset();
+
             isReadingMode = false;
             scoreReading = 0;
             scoreNonReading = 0;
-
+            
+            offset = 0;
             currentLine = null;
-            currentFixation = null;
+            lastMapped = null;
         }
     };
 
     // internal
     var settings;
-    var commons;
 
-    var fixations = [];
-    var lines = [];
-    var lineSpacing;
-    var lineHeight;
-    var lineWidth;
+    var geometry;
+    var fixations;
+    var zone;
+    var newLineDetector;
+    var linePredictor;
 
-    var lastMapped;
     var isReadingMode;
     var scoreReading;
     var scoreNonReading;
 
-    var currentFixation;
+    var offset;
     var currentLine;
+    var lastMapped;
 
-    var offsetX;
-    var offsetY;
-    var lastX;
-    var lastY;
-    var prevFixX;
-    var prevFixY;
-    var prevFixDuration;
+    function createGeometry(targets) {
+        var geomModel = geometry.create(targets);
+        if (geomModel) {
+            zone.init({
+                progressiveLeft: settings.progressiveLeft,
+                progressiveRight: settings.progressiveRight,
+                readingMarginY: settings.readingZoneMarginY,
+                neutralMarginY: settings.neutralZoneMarginY,
+                slope: settings.slope
+            }, geomModel);
+            newLineDetector.init({
+                minMarginY: 0.3,
+                maxMarginY: 1.3,
+                slope: settings.slope
+            }, geomModel);
+            linePredictor.init(geomModel);
+        }
+    }
 
-    function obtainGeometry(targets) {
+    function classifySaccadeZone(currentFixation) {
+        
+        var newLine = newLineDetector.search( currentFixation );
 
-        if (commons.fixedText && lines.length > 0) {
-            return;
+        var guessedZone;
+        if (newLine) {
+            guessedZone = zone.reading;
+            currentFixation.saccade.newLine = true;
+        }
+        else {
+            newLine = null;
+            guessedZone = zone.match( currentFixation.saccade );
         }
 
-        lines.length = 0;
-        lineSpacing = 0;
-        lineHeight = 0;
-        lineWidth = 0;
+        currentFixation.saccade.zone = guessedZone;
+        updateScores(guessedZone);
+
+        return newLine;
+    }
+
+    function updateScores(guessedZone) {
+        switch (guessedZone) {
+            case zone.reading:
+                console.log('in reading zone');
+                scoreReading++;
+                scoreNonReading -= settings.forgettingFactor;
+                break;
+            case zone.neutral:
+                console.log('in neutral zone');
+                scoreNonReading++;
+                break;
+            default:
+                console.log('in nonreading zone');
+                scoreNonReading = settings.nonreadingThreshold;
+                scoreReading = 0;
+        }
+
+        scoreReading = scoreReading < settings.readingThreshold ? scoreReading : settings.readingThreshold;
+        scoreReading = scoreReading > 0 ? scoreReading : 0;
+        scoreNonReading = scoreNonReading < settings.nonreadingThreshold ? scoreNonReading : settings.nonreadingThreshold;
+        scoreNonReading = scoreNonReading > 0 ? scoreNonReading : 0;
+    }
+
+    function updateMode() {
+        var result = {
+            toReading: false,
+            toNonReading: false
+        };
+
+        if (!isReadingMode && scoreReading === settings.readingThreshold) {
+            changeMode(true);
+            result.toReading = true;
+        }
+        else if (isReadingMode && scoreNonReading === settings.nonreadingThreshold) {
+            changeMode(false);
+            result.toNonReading = true;
+        }
+
+        return result;
+    }
+
+    function changeMode(toReading) {
+        console.log('change Mode', toReading);
+        isReadingMode = toReading;
+    }
+
+    function updateOffset( fixation, line ) {
+        offset = (line.bottom - line.top) / 2 - (fixation.y - offset);
+    }
+
+    function map(fixation, line) {
+
+        if (!isReadingMode) {
+            console.log('map: none');
+            return null;
+        }
+
+        if (!line) {
+            console.log('map: ???');
+            return null;
+        }
+
+        var x = fixation.x;
+        var result = null;
+        var minDist = Number.MAX_VALUE;
+
+        var words = line.words;
+        for (var i = 0; i < words.length; ++i) {
+            var word = words[i];
+            var rect = word.rect;
+                
+            var dist = x < rect.left ? (rect.left - x) : (x > rect.right ? x - rect.right : 0);
+            if (dist < minDist) {
+                result = word;
+                minDist = dist;
+                if (dist === 0) {
+                    break;
+                }
+            }
+        }
+
+        console.log('map: search', minDist);
+        return result;
+    }
+
+    function backtrackFixations( currentFixation, line ) {
+        var fixation = currentFixation.previous;
+        while (fixation && !fixation.saccade.newLine) {
+            if (fixation.saccade.zone === zone.nonreading) {
+                break;
+            }
+            fixation.word = map( fixation, line );
+            fixation = fixation.previous;
+        }
+    }
+
+    function select(word) {
+        if (word) {
+            // var rect = word.dom.getBoundingClientRect();
+            // offsetX = (rect.top + rect.height / 2) - lastY;
+            // offsetY = (rect.top + rect.height / 2) - lastY;
+        }
+        else {
+            // offsetY = 0;
+        }
+    }
+
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    if (!root.GazeTargets.Models) {
+        root.GazeTargets.Models = {};
+    }
+
+    if (!root.GazeTargets.Models.Reading) {
+        root.GazeTargets.Models.Reading = {};
+    }
+
+    root.GazeTargets.Models.Reading.Campbell = Campbell;
+
+})(window);
+// Reading model: fixation start detetor, definition of fixation and sacccade
+// 
+// Depends:
+//      GazeTargets.Models.Reading.Zone
+
+(function (root) {
+
+    'use strict';
+
+    var Fixations = {
+
+        init: function () {
+            lastFixation = null;
+            currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
+            
+            zones = GazeTargets.Models.Reading.Zone;
+        },
+
+        feed: function (x, y, duration) {
+
+            if (currentFixation.duration > duration) {
+                currentFixation = new Fixation(x, y, duration);
+                currentFixation.previous = lastFixation;
+                
+                lastFixation = currentFixation;
+                currentFixation.saccade = new Saccade(x - lastFixation.x, y - lastFixation.y);
+                
+                fixations.push( currentFixation );
+                
+                return currentFixation;
+            }
+            else {
+                currentFixation.duration = duration;
+            }
+
+            return null;
+        },
+
+        reset: function () {
+            fixations.forEach(function (value) {
+                console.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
+            });
+            fixations.length = 0;
+
+            lastFixation = null;
+            currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
+        },
+
+        current: function() {
+            return currentFixation;
+        }
+    };
+
+    // internal
+    var fixations = [];
+
+    var lastFixation;
+    var currentFixation;
+
+    var zones;
+
+    // Fixation
+    function Fixation(x, y, duration) {
+        this.x = x;
+        this.y = y;
+        this.duration = duration;
+        this.saccade = null;
+        this.word = null;
+        this.previous = null;
+    }
+
+    // Saccade
+    function Saccade(x, y) {
+        this.x = x;
+        this.y = y;
+        this.zone = zones.nonreading;
+        this.newLine = false;
+    }
+
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    if (!root.GazeTargets.Models) {
+        root.GazeTargets.Models = {};
+    }
+
+    if (!root.GazeTargets.Models.Reading) {
+        root.GazeTargets.Models.Reading = {};
+    }
+
+    root.GazeTargets.Models.Reading.Fixations = Fixations;
+    root.GazeTargets.Models.Reading.Fixation = Fixation;
+
+})(window);
+// Reading model: text geometry model creator
+
+(function (root) {
+
+    'use strict';
+
+    var Geometry = {
+
+        init: function(_isTextFixed) {
+            isTextFixed = _isTextFixed;
+        },
+
+        create: function (targets) {
+            if (isTextFixed && lines.length > 0) {
+                return null;
+            }
+
+            this.reset();
         
+            compute(targets);
+
+            return this.model();
+        },
+
+        reset: function () {
+            lines = [];
+            lineSpacing = 0;
+            lineHeight = 0;
+            lineWidth = 0;
+        },
+
+        model: function () {
+            return {
+                lines: lines,
+                lineSpacing: lineSpacing,
+                lineHeight: lineHeight,
+                lineWidth: lineWidth
+            };
+        }
+    };
+
+    // internal
+    var isTextFixed;
+
+    var lines;
+    var lineSpacing;
+    var lineHeight;
+    var lineWidth;
+
+    function compute(targets) {
+
         var lineY = 0;
         var currentLine = null;
 
@@ -4799,12 +5080,12 @@
                         lineWidth = currentLine.right - currentLine.left;
                     }
                 }
-                currentLine = createLine(rect, target);
+                currentLine = new Line(rect, target);
                 lines.push(currentLine);
                 lineY = rect.top;
             }
             else {
-                currentLine.addWord(rect, target);
+                currentLine.add(rect, target);
             }
 //                console.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
         }
@@ -4825,277 +5106,36 @@
             lineSpacing = 2 * (line.bottom - line.top);
         }
         
-        console.log('creating geometry model', lines.length);
+        console.log('geometry model created', lines.length);
     }
 
-    function createLine(rect, target) {
-        var line = {
-            left: rect.left,
-            top: rect.top,
-            right: rect.right,
-            bottom: rect.bottom,
-            words: [{
-                rect: rect,
-                dom: target
-            }],
+    // Line object
+    function Line(word, dom) {
+        this.left = word.left;
+        this.top = word.top;
+        this.right = word.right;
+        this.bottom = word.bottom;
 
-            addWord: function (rect, target) {
-                this.right = rect.right;
-                if (this.bottom < rect.bottom) {
-                    this.bottom = rect.bottom;
-                }
-                this.words.push({
-                    rect: rect,
-                    dom: target,
-                    line: this
-                });
-            }
-        };
-
-        line.words[0].line = line;
-
-        return line;
+        this.words = [];
+        this.words.push(new Word(word, dom, this));
     }
 
-    function updateMode(dx, dy ) {
-        console.log('update Mode', dx, dy);
-        if (isInReadingZone( dx, dy )) {
-            console.log('in reading zone');
-            scoreReading++;
-            scoreNonReading -= settings.forgettingFactor;
-            currentFixation.saccadeType = SaccadeType.reading;
-        }
-        else if (isInNeutralZone( dx, dy )) {
-            console.log('in neutral zone');
-            scoreNonReading++;
-            currentFixation.saccadeType = SaccadeType.neutral;
-        }
-        else {
-            console.log('in nonreading zone');
-            scoreNonReading = settings.nonreadingThreshold;
-            scoreReading = 0;
-            currentFixation.saccadeType = SaccadeType.nonreading;
+    Line.prototype.add = function (word, dom) {
+
+        this.right = word.right;
+        if (this.bottom < word.bottom) {
+            this.bottom = word.bottom;
         }
 
-        scoreReading = scoreReading < settings.readingThreshold ? scoreReading : settings.readingThreshold;
-        scoreReading = scoreReading > 0 ? scoreReading : 0;
-        scoreNonReading = scoreNonReading < settings.nonreadingThreshold ? scoreNonReading : settings.nonreadingThreshold;
-        scoreNonReading = scoreNonReading > 0 ? scoreNonReading : 0;
-        
-        if (!isReadingMode && scoreReading === settings.readingThreshold) {
-            changeMode(true);
-        }
-        else if (isReadingMode && scoreNonReading === settings.nonreadingThreshold) {
-            changeMode(false);
-        }
-    }
-
-    function isInReadingZone(x, y) {
-        if (x < 0 && isNewLine( x, y)) {
-            return true;
-        }
-
-        return contains( settings.readingZoneMarginY, x, y);
-    }
-
-    function isInNeutralZone(x, y) {
-        return contains( settings.neutralZoneMarginY, x, y);
-    }
-    
-    function contains(marginY, x, y) {
-
-        var isInsideProgressive = function () {
-            var left = settings.progressiveLeft * lineHeight;
-            var right = settings.progressiveRight * lineHeight;
-            var heightDelta = x * settings.slope;
-            var margin = marginY * lineHeight + heightDelta;
-            console.log('is Inside Progressive?', left, right, -margin, margin);
-            return left < x && x < right && -margin < y && y < margin;
-        };
-
-        var isInsideRegressive = function () {
-            var left = -lineWidth;
-            var right = 0;
-            var heightDelta = -x * settings.slope;
-            var margin = marginY * lineHeight + heightDelta;
-            console.log('is Inside Regressive?', left, right, -margin - lineHeight, margin);
-            return left < x && x < right && -margin < y && y < margin;
-        };
-
-        return isInsideProgressive() || isInsideRegressive();
-    }
-
-    function isNewLine(x, y) {
-
-        var fixIndex = fixations.length - 1;
-        var lastFix = fixations[fixIndex];
-        if (lastFix && lastFix.word) {
-            console.log('new line? compare against the current line');
-            var currentLine = lastFix.word.line;
-            var firstLineFix = lastFix;
-            while (fixIndex >= 0) {
-                var fix = fixations[fixIndex];
-                if (fix.word) {
-                    if (fix.word.line === currentLine) {
-                        firstLineFix = fix;
-                    }
-                    else if (fix.word.line) {
-                        break;
-                    }
-                }
-                else if (fix.saccadeType == SaccadeType.nonreading) {
-                    break;
-                }
-                fixIndex -= 1;
-            }
-
-            var jump = currentFixation.y - firstLineFix.y;
-            if ( 0.25 * lineSpacing < jump && jump < 1.5 * lineSpacing) {
-                console.log('    is new line', jump);
-                return true;
-            }
-            else {
-                console.log('    is not new line', jump);
-                return false;
-            }
-        }
-
-        var left = -lineWidth;
-        var right = 0;
-        var heightDelta = -x * settings.slope;
-        var margin = settings.readingZoneMarginY * lineHeight + heightDelta;
-        console.log('new line?', left, right, -margin - lineSpacing, -margin);
-        return left < x && x < right && (-margin - lineSpacing) < y && y < -margin;
-    }
-
-    function changeMode(toReading) {
-        console.log('change Mode', toReading);
-        isReadingMode = toReading;
-        if (isReadingMode) {
-            guessCurrentLine();
-        }
-        else {
-            currentLine = null;
-        }
-    }
-
-    function guessCurrentLine() {
-        var result = null;
-        
-        // first search the fixations already mapped
-        result = getNearestLineFromPrevFixations();
-
-        // then just map lines naively
-        if (!result) {
-            result = getClosestLine();
-        }
-
-        console.log('guessed line', result.top);
-        offsetY = (result.top + result.bottom) / 2 - lastY;
-
-        return result;
-    }
-
-    function getNearestLineFromPrevFixations() {
-        var minDist = 1000000;
-        var closestFix = null;
-        var fix, dist;
-        var minFixIndex = Math.max( 0, fixations.length - 40);
-        for (var i = fixations.length - 1; i >= minFixIndex; --i) {
-            fix = fixations[i];
-            dist = Math.abs(fix.x - lastY);
-            if (dist < minDist) {
-                minDist = dist;
-                closestFix = fix;
-            }
-        }
-
-        return (minDist < lineSpacing / 2) && closestFix.word ? closestFix.word.line : null;
-    }
-
-    function getClosestLine() {
-        var minDist = 1000000;
-        var closestLine = null;
-        var line, dist;
-        for (var i = 0; i < lines.length; ++i) {
-            line = lines[i];
-            dist = Math.abs(line.top - lastY);
-            if (dist < minDist) {
-                minDist = dist;
-                closestLine = line;
-            }
-            dist = Math.abs(line.bottom - lastY);
-            if (dist < minDist) {
-                minDist = dist;
-                closestLine = line;
-            }
-        }
-
-        return closestLine;        
-    }
-
-    function map(fix) {
-
-        if (!isReadingMode) {
-            return null;
-        }
-
-        if (fix.word) {
-            return fix.word;
-        }
-
-        var result = null;
-        var minDist = Number.MAX_VALUE;
-
-        for (var i = 0; i < lines.length; ++i) {
-            var words = lines[i].words;
-            for (var j = 0; j < words.length; ++j) {
-                var word = words[j];
-                var rect = word.rect;
-                
-                var dx = fix.x < rect.left ? rect.left - fix.x : (fix.x > rect.right ? fix.x - rect.right : 0);
-                var dy = fix.y < rect.top ? rect.top - fix.y : (fix.y > rect.bottom ? fix.y - rect.bottom : 0);
-                var dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < minDist) {
-                    result = word;
-                    minDist = dist;
-                    if (dist === 0) {
-                        i = lines.length;
-                        break;
-                    }
-                }
-            }
-        }
-
-        return minDist < lineSpacing ? result : null;
-    }
-
-    function select(word) {
-        if (word) {
-            var rect = word.dom.getBoundingClientRect();
-            offsetX = (rect.top + rect.height / 2) - lastY;
-            offsetY = (rect.top + rect.height / 2) - lastY;
-        }
-        else {
-            offsetY = 0;
-        }
-    }
-
-    // FIxation
-    function Fixation(x, y) {
-        this.x = x;
-        this.y = y;
-        this.currentModeIsReading = isReadingMode;
-        this.saccadeType = SaccadeType.nonreading;
-        this.word = null;
-    }
-
-    // Mode
-    var SaccadeType = {
-        nonreading: 0,
-        neutral: 1,
-        reading: 2
+        this.words.push(new Word(word, dom, this));
     };
+
+    // Word object
+    function Word(rect, dom, line) {
+        this.rect = rect;
+        this.dom = dom;
+        this.line = line;
+    }
 
     // Publication
     if (!root.GazeTargets) {
@@ -5110,7 +5150,247 @@
         root.GazeTargets.Models.Reading = {};
     }
 
-    root.GazeTargets.Models.Reading.Campbell = Campbell;
+    root.GazeTargets.Models.Reading.Geometry = Geometry;
+    root.GazeTargets.Models.Reading.Geometry.Line = Line;
+    root.GazeTargets.Models.Reading.Geometry.Word = Word;
+
+})(window);
+// Reading model: line predictor
+
+(function (root) {
+
+    'use strict';
+
+    var LinePredictor = {
+
+        init: function(_geomModel) {
+            geomModel = _geomModel;
+        },
+
+        get: function(switched, newLine, currentFixation) {
+            var result = null;
+            if (newLine) {
+                result = newLine;
+                console.log('current line is the new line');
+            }
+            else if (switched.toReading) {
+                result = guessCurrentLine( currentFixation );
+            }
+            else if (switched.toNonReading) {
+                result = null;
+                console.log('current line reset');
+            }
+            else {
+                var previousFixation = currentFixation.previous;
+                result = previousFixation && previousFixation.word ? 
+                    previousFixation.word.line : 
+                    getClosestLine( currentFixation);
+                console.log('previous fixation line?');
+            }
+
+            return result;
+        },
+
+        reset: function() {
+            geomModel = null;
+        }
+    };
+
+    // internal
+    var geomModel;
+
+    function guessCurrentLine(currentFixation) {
+        var result = null;
+        
+        // first search the fixations already mapped
+        if (currentFixation) {
+            result = guessNearestLineFromPreviousFixations( currentFixation );
+            console.log('guessed line from prev fixation', result);
+        }
+
+        // then just map lines naively
+        if (!result) {
+            result = getClosestLine( currentFixation );
+            console.log('just taking the closest line', result.top);
+        }
+
+        return result;
+    }
+
+    function guessNearestLineFromPreviousFixations( currentFixation ) {
+        var minDist = Number.MAX_VALUE;
+        var closestFixation = null;
+        var dx, dy, dist;
+
+        var fixation = currentFixation.previous;
+        while (fixation) {
+
+            if (fixation.word) {
+                dx = currentFixation.x - fixation.x;
+                dy = currentFixation.y - fixation.y;
+                dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestFixation = fix;
+                }
+            }
+
+            fixation = fixation.previous;
+        }
+
+        return closestFixation && (minDist < geomModel.lineSpacing / 2) ? closestFixation.word.line : null;
+    }
+
+    function getClosestLine( fixation ) {
+
+        var result = null;
+        var minDist = Number.MAX_VALUE;
+        var line, dist;
+
+        var lines = geomModel.lines;
+        for (var i = 0; i < lines.length; ++i) {
+            line = lines[i];
+            dist = Math.abs((line.top + line.bottom) / 2 - fixation.y);
+            if (dist < minDist) {
+                minDist = dist;
+                result = line;
+            }
+        }
+
+        return result;        
+    }
+
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    if (!root.GazeTargets.Models) {
+        root.GazeTargets.Models = {};
+    }
+
+    if (!root.GazeTargets.Models.Reading) {
+        root.GazeTargets.Models.Reading = {};
+    }
+
+    root.GazeTargets.Models.Reading.LinePredictor = LinePredictor;
+
+})(window);
+
+// Reading model: mathes reading zone
+
+(function (root) {
+
+    'use strict';
+
+    var NewLineDetector = {
+
+        init: function (settings, geomModel) {
+            lineMaxWidth = geomModel.lineWidth;
+            minMarginY = (settings.minMarginY || 0.3) * geomModel.lineSpacing;
+            maxMarginY = (settings.maxMarginY || 1.3) * geomModel.lineSpacing;
+            slope = settings.slope || 0.1;
+
+            zones = root.GazeTargets.Models.Reading.Zone;
+        },
+
+        search: function (currentFixation) {
+
+            if (!isInZone(currentFixation.saccade)) {
+                return null;
+            }
+
+            console.log('new line? compare against the current line');
+            var result = compareAgainstCurrentLine(currentFixation);
+            return result;
+        },
+
+        reset: function () {
+        }
+    };
+
+    // internal
+    var lineMaxWidth;
+    var minMarginY;
+    var maxMarginY;
+    var slope;
+
+    var zones;
+
+    function isInZone(saccade) {
+        var heightDelta = -saccade.x * slope;
+        var left = -lineMaxWidth;
+        var top = minMarginY - heightDelta;
+        var bottom = maxMarginY + heightDelta;
+        return left < saccade.x && saccade.x < 0 && 
+               top < saccade.y && saccade.y < bottom;
+    }
+
+    function compareAgainstCurrentLine(currentFixation) {
+        
+        var firstLineFixation = getFirstFixationOnItsLine(currentFixation);    
+
+        if (!firstLineFixation) {
+            console.log('    cannot do it');
+            return null;
+        }
+
+        var verticalJump = currentFixation.y - firstLineFixation.y;
+        if ( minMarginY < verticalJump && verticalJump < maxMarginY) {
+            console.log('    is below the current', verticalJump);
+            return firstLineFixation.word.line;
+        }
+
+        return null;
+    }
+
+    function getFirstFixationOnItsLine(currentFixation) {
+
+        var previousFixation = currentFixation.previous;
+        if (!previousFixation || !previousFixation.word) {  // previous fixation should be mapped onto a word
+            return null;
+        }
+
+        var currentLine = previousFixation.word.line;
+        var fixation = previousFixation;
+        var result = previousFixation;
+
+        while (fixation) {
+            if (fixation.word) {                // the fixation was mapped onto a word, lets test its line
+                if (fixation.word.line === currentLine) {   // same line, continue moving backward
+                    result = fixation;
+                    if (result.x < currentFixation.x) {     // no need to search further for more  
+                        break;
+                    }
+                }
+                else if (fixation.word.line) {  // the fixation mapped onto another line, break
+                    break;
+                }
+            }
+            else if (fixation.saccade.zone === zones.nonreading) {   // 
+                break;
+            }
+
+            fixation = fixation.previous;
+        }
+
+        return result;
+    }
+        
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    if (!root.GazeTargets.Models) {
+        root.GazeTargets.Models = {};
+    }
+
+    if (!root.GazeTargets.Models.Reading) {
+        root.GazeTargets.Models.Reading = {};
+    }
+
+    root.GazeTargets.Models.Reading.NewLineDetector = NewLineDetector;
 
 })(window);
 // Model for eading
@@ -5161,7 +5441,7 @@
                 isReadingFixation = saccade <= settings.maxSaccadeLength && 
                     Math.abs(dy) / dx <= settings.maxSaccadeAngleRatio;
 
-                var saccadeIndicator = lastMapped ? (lastMapped.line.right - lastMapped.line.left) * 0.5 : 1000000;
+                var saccadeIndicator = lastMapped ? (lastMapped.line.right - lastMapped.line.left) * 0.5 : Number.MAX_VALUE;
                 if (!isReadingFixation || dx < -saccadeIndicator) {
                     yOffset = 0;
                 }
@@ -5183,7 +5463,7 @@
             lastY = -1000;
             prevFixX = -1000;
             prevFixY = -1000;
-            prevFixDuration = 1000000;
+            prevFixDuration = Number.MAX_VALUE;
             isReadingFixation = false;
             lastMapped = null;
             lineSpacing = 0;
@@ -5327,6 +5607,99 @@
     }
 
     root.GazeTargets.Models.Reading.Simplest = Simplest;
+
+})(window);
+// Reading model: mathes reading zone
+
+(function (root) {
+
+    'use strict';
+
+    var Zone = {
+
+        // types
+        nonreading: 0,
+        neutral: 1,
+        reading: 2,
+
+        init: function (settings, geomModel) {
+            lineHeight = geomModel.lineHeight;
+            progressiveLeft = (settings.progressiveLeft || -1.5) * lineHeight;
+            progressiveRight = (settings.progressiveRight || 10) * lineHeight;
+            regressiveLeft = -geomModel.lineWidth;
+            regressiveRight = 0;
+            readingMarginY = (settings.readingMarginY || 1.5) * lineHeight;
+            neutralMarginY = (settings.neutralMarginY || 3) * lineHeight;
+            slope = settings.slope || 0.1;
+        },
+
+        match: function (saccade) {
+            //console.log('zone search', saccade.x, saccade.y);
+            var zone = this.nonreading;
+
+            if (isInsideBox( readingMarginY, saccade)) {
+                zone = this.reading;
+            }
+            else if (isInsideBox( neutralMarginY, saccade )) {
+                zone = this.neutral;
+            }
+
+            //var isNewLine = detectNewLine(saccade);
+
+            return zone;
+        },
+
+        reset: function () {
+        }
+    };
+
+    // internal
+    var lineHeight;
+    var progressiveLeft;
+    var progressiveRight;
+    var regressiveLeft;
+    var regressiveRight;
+    var readingMarginY;
+    var neutralMarginY;
+    var slope;
+
+    function isInsideProgressive(marginY, saccade)
+    {
+        var heightDelta = saccade.x * slope;
+        var margin = marginY + heightDelta;
+        //console.log('is Inside Progressive?', progressiveLeft, progressiveRight, -margin, margin);
+        return progressiveLeft < saccade.x && saccade.x < progressiveRight && 
+               -margin < saccade.y && saccade.y < margin;
+    }
+
+    function isInsideRegressive(marginY, saccade)
+    {
+        var heightDelta = -saccade.x * slope;
+        var margin = marginY + heightDelta;
+        //console.log('is Inside Regressive?', regressiveLeft, regressiveRight, -margin, margin);
+        return regressiveLeft < saccade.x && saccade.x < 0 && 
+               -margin < saccade.y && saccade.y < margin;
+    }
+
+    function isInsideBox(marginY, saccade)
+    {
+        return isInsideProgressive(marginY, saccade) || isInsideRegressive(marginY, saccade);
+    }
+    
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    if (!root.GazeTargets.Models) {
+        root.GazeTargets.Models = {};
+    }
+
+    if (!root.GazeTargets.Models.Reading) {
+        root.GazeTargets.Models.Reading = {};
+    }
+
+    root.GazeTargets.Models.Reading.Zone = Zone;
 
 })(window);
 // Gaze pointer

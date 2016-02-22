@@ -13,6 +13,7 @@
             slope = settings.slope || 0.1;
 
             zones = root.GazeTargets.Models.Reading.Zone;
+            logger = root.GazeTargets.Logger;
         },
 
         search: function (currentFixation) {
@@ -21,7 +22,7 @@
                 return null;
             }
 
-            console.log('new line? compare against the current line');
+            logger.log('new line? compare against the current line');
             var result = compareAgainstCurrentLine(currentFixation);
             return result;
         },
@@ -37,6 +38,7 @@
     var slope;
 
     var zones;
+    var logger;
 
     function isInZone(saccade) {
         var heightDelta = -saccade.x * slope;
@@ -52,13 +54,13 @@
         var firstLineFixation = getFirstFixationOnItsLine(currentFixation);    
 
         if (!firstLineFixation) {
-            console.log('    cannot do it');
+            logger.log('    cannot do it');
             return null;
         }
 
         var verticalJump = currentFixation.y - firstLineFixation.y;
         if ( minMarginY < verticalJump && verticalJump < maxMarginY) {
-            console.log('    is below the current', verticalJump);
+            logger.log('    is below the current', verticalJump);
             return firstLineFixation.word.line;
         }
 

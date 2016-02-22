@@ -17,6 +17,8 @@
         init: function (_settings, _commons) {
             settings = _settings;
             commons = _commons;
+
+            logger = root.GazeTargets.Logger;
         },
 
         feed: function (targets, x, y, fixationDuration) {
@@ -38,7 +40,7 @@
             var mapped = lastMapped;
 
             if (newFixation) {
-                console.log(x, y);
+                logger.log(x, y);
                 var dx = x - prevFixX;
                 var dy = y - prevFixY;
                 var saccade = Math.sqrt(dx * dx + dy * dy);
@@ -53,7 +55,7 @@
 
                 mapped = map(x, y + yOffset);
 
-                //console.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
+                //logger.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
             }
 
             lastMapped = mapped;
@@ -79,6 +81,8 @@
     // internal
     var settings;
     var commons;
+
+    var logger;
 
     var lines = [];
     var lineSpacing;
@@ -119,7 +123,7 @@
                 currentLine.addWord(rect, target);
             }
 
-//                console.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
+//                logger.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
         }
 
         if (lines.length > 1) {

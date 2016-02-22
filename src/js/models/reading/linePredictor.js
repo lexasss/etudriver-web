@@ -8,40 +8,42 @@
 
         init: function(_geomModel) {
             geomModel = _geomModel;
+
+            logger = root.GazeTargets.Logger;
         },
 
-        get: function(switched, newLine, currentFixation) 
-	 	{
-	 		var result = null;
-	        if (newLine) {
-	            result = newLine;
-        		console.log('current line is the new line');
-	        }
-	        else if (switched.toReading) {
-	            result = guessCurrentLine( currentFixation );
-	        }
-	        else if (switched.toNonReading) {
-	            result = null;
-        		console.log('current line reset');
-	        }
-	        else {
-	        	var previousFixation = currentFixation.previous;
-	        	result = previousFixation && previousFixation.word ? 
-	        		previousFixation.word.line : 
-	        		getClosestLine( currentFixation);
-        		console.log('previous fixation line?');
-	        }
+        get: function(switched, newLine, currentFixation) {
+            var result = null;
+            if (newLine) {
+                result = newLine;
+                logger.log('current line is the new line');
+            }
+            else if (switched.toReading) {
+                result = guessCurrentLine( currentFixation );
+            }
+            else if (switched.toNonReading) {
+                result = null;
+                logger.log('current line reset');
+            }
+            else {
+                var previousFixation = currentFixation.previous;
+                result = previousFixation && previousFixation.word ? 
+                    previousFixation.word.line : 
+                    getClosestLine( currentFixation);
+                logger.log('previous fixation line?');
+            }
 
-	        return result;
-	    },
+            return result;
+        },
 
-	    reset: function() {
-	    	geomModel = null;
-	    }
+        reset: function() {
+            geomModel = null;
+        }
     };
 
     // internal
     var geomModel;
+    var logger;
 
     function guessCurrentLine(currentFixation) {
         var result = null;
@@ -49,13 +51,13 @@
         // first search the fixations already mapped
         if (currentFixation) {
             result = guessNearestLineFromPreviousFixations( currentFixation );
-        	console.log('guessed line from prev fixation', result);
+            logger.log('guessed line from prev fixation', result);
         }
 
         // then just map lines naively
         if (!result) {
             result = getClosestLine( currentFixation );
-        	console.log('just taking the closest line', result.top);
+            logger.log('just taking the closest line', result.top);
         }
 
         return result;
