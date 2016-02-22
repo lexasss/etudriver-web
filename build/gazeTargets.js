@@ -3364,6 +3364,71 @@
     root.GazeTargets.Keyboard = Keyboard;
 
 })(window);
+// Logging utils
+
+(function (root) {
+
+    'use strict';
+
+    var Logger = {
+
+        log: function (...args) {
+            if (args.length > 1 && typeof args[0] === 'symbol') {
+                var type = args[0];
+                args = args.slice(1);
+                
+                if (type === this.Type['error']) {
+                    console.error(header, 'ERROR: ', ...args);
+                    return true;
+                }
+                
+                if (type === this.Type['info']) {
+                    console.info(header, ...args);
+                    return true;
+                }
+            }
+
+            if (level === this.Level.debug) {
+                console.log(header, ...args);
+                return true;
+            }
+
+            return false;
+        },
+
+        level: function (_level) {
+            if (_level !== undefined) {
+                level = _level;
+            }
+            else {
+                return level;
+            }
+        },
+
+        Level: {
+            silent: 'silient',
+            debug: 'debug'
+        },
+
+        Type: {
+            debug: Symbol('debug'),     // default
+            info: Symbol('info'),       // info
+            error: Symbol('error')
+        }
+    };
+
+    // internal
+    var level = Logger.Level.debug;
+    var header = '[GT/R]  ';
+
+    // Publication
+    if (!root.GazeTargets) {
+        root.GazeTargets = {};
+    }
+
+    root.GazeTargets.Logger = Logger;
+
+})(window);
 // Main script
 // Dependencies:
 //      utils.js
@@ -4689,6 +4754,8 @@
             zone = root.GazeTargets.Models.Reading.Zone;
             newLineDetector = root.GazeTargets.Models.Reading.NewLineDetector;
             linePredictor = root.GazeTargets.Models.Reading.LinePredictor;
+
+            logger = root.GazeTargets.Logger;
         },
 
         feed: function (targets, x, y, fixationDuration) {
@@ -4713,7 +4780,7 @@
                 if (switched.toReading && mapped) {
                     backtrackFixations( newFixation, mapped.line );
                 }
-                //console.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
+                //logger.log('new fix: ' + dx + ',' + dy + ' = ' + saccade + ' : ' + (isReadingFixation ? 'reading' : '-'));
             }
 
             lastMapped = mapped;
@@ -4757,6 +4824,8 @@
     var currentLine;
     var lastMapped;
 
+    var logger;
+
     function createGeometry(targets) {
         var geomModel = geometry.create(targets);
         if (geomModel) {
@@ -4799,16 +4868,16 @@
     function updateScores(guessedZone) {
         switch (guessedZone) {
             case zone.reading:
-                console.log('in reading zone');
+                logger.log('in reading zone');
                 scoreReading++;
                 scoreNonReading -= settings.forgettingFactor;
                 break;
             case zone.neutral:
-                console.log('in neutral zone');
+                logger.log('in neutral zone');
                 scoreNonReading++;
                 break;
             default:
-                console.log('in nonreading zone');
+                logger.log('in nonreading zone');
                 scoreNonReading = settings.nonreadingThreshold;
                 scoreReading = 0;
         }
@@ -4838,7 +4907,7 @@
     }
 
     function changeMode(toReading) {
-        console.log('change Mode', toReading);
+        logger.log('change Mode', toReading);
         isReadingMode = toReading;
     }
 
@@ -4849,12 +4918,12 @@
     function map(fixation, line) {
 
         if (!isReadingMode) {
-            console.log('map: none');
+            logger.log('map: none');
             return null;
         }
 
         if (!line) {
-            console.log('map: ???');
+            logger.log(logger.Type.error, 'map: ???');
             return null;
         }
 
@@ -4877,7 +4946,7 @@
             }
         }
 
-        console.log('map: search', minDist);
+        logger.log('map: search', minDist);
         return result;
     }
 
@@ -4935,6 +5004,7 @@
             currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
             
             zones = GazeTargets.Models.Reading.Zone;
+            logger = root.GazeTargets.Logger;
         },
 
         feed: function (x, y, duration) {
@@ -4959,7 +5029,7 @@
 
         reset: function () {
             fixations.forEach(function (value) {
-                console.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
+                logger.log('{ x: ' + value.x + ', y: ' + value.y + ' },');
             });
             fixations.length = 0;
 
@@ -4979,6 +5049,7 @@
     var currentFixation;
 
     var zones;
+    var logger;
 
     // Fixation
     function Fixation(x, y, duration) {
@@ -5025,6 +5096,8 @@
 
         init: function(_isTextFixed) {
             isTextFixed = _isTextFixed;
+
+            logger = root.GazeTargets.Logger;
         },
 
         create: function (targets) {
@@ -5040,6 +5113,10 @@
         },
 
         reset: function () {
+            lines.forEach(function (value) {
+                logger.log('new Word({ left: ' + value.left + ', top: ' + value.top + 
+                    ', right: ' + value.right + ', bottom: ' + value.bottom + ' }),');
+            });
             lines = [];
             lineSpacing = 0;
             lineHeight = 0;
@@ -5064,6 +5141,8 @@
     var lineHeight;
     var lineWidth;
 
+    var logger;
+
     function compute(targets) {
 
         var lineY = 0;
@@ -5087,7 +5166,7 @@
             else {
                 currentLine.add(rect, target);
             }
-//                console.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
+//                logger.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
         }
 
         if (currentLine) {
@@ -5106,7 +5185,7 @@
             lineSpacing = 2 * (line.bottom - line.top);
         }
         
-        console.log('geometry model created', lines.length);
+        logger.log('geometry model created', lines.length);
     }
 
     // Line object
@@ -5165,27 +5244,29 @@
 
         init: function(_geomModel) {
             geomModel = _geomModel;
+
+            logger = root.GazeTargets.Logger;
         },
 
         get: function(switched, newLine, currentFixation) {
             var result = null;
             if (newLine) {
                 result = newLine;
-                console.log('current line is the new line');
+                logger.log('current line is the new line');
             }
             else if (switched.toReading) {
                 result = guessCurrentLine( currentFixation );
             }
             else if (switched.toNonReading) {
                 result = null;
-                console.log('current line reset');
+                logger.log('current line reset');
             }
             else {
                 var previousFixation = currentFixation.previous;
                 result = previousFixation && previousFixation.word ? 
                     previousFixation.word.line : 
                     getClosestLine( currentFixation);
-                console.log('previous fixation line?');
+                logger.log('previous fixation line?');
             }
 
             return result;
@@ -5198,6 +5279,7 @@
 
     // internal
     var geomModel;
+    var logger;
 
     function guessCurrentLine(currentFixation) {
         var result = null;
@@ -5205,13 +5287,13 @@
         // first search the fixations already mapped
         if (currentFixation) {
             result = guessNearestLineFromPreviousFixations( currentFixation );
-            console.log('guessed line from prev fixation', result);
+            logger.log('guessed line from prev fixation', result);
         }
 
         // then just map lines naively
         if (!result) {
             result = getClosestLine( currentFixation );
-            console.log('just taking the closest line', result.top);
+            logger.log('just taking the closest line', result.top);
         }
 
         return result;
@@ -5292,6 +5374,7 @@
             slope = settings.slope || 0.1;
 
             zones = root.GazeTargets.Models.Reading.Zone;
+            logger = root.GazeTargets.Logger;
         },
 
         search: function (currentFixation) {
@@ -5300,7 +5383,7 @@
                 return null;
             }
 
-            console.log('new line? compare against the current line');
+            logger.log('new line? compare against the current line');
             var result = compareAgainstCurrentLine(currentFixation);
             return result;
         },
@@ -5316,6 +5399,7 @@
     var slope;
 
     var zones;
+    var logger;
 
     function isInZone(saccade) {
         var heightDelta = -saccade.x * slope;
@@ -5331,13 +5415,13 @@
         var firstLineFixation = getFirstFixationOnItsLine(currentFixation);    
 
         if (!firstLineFixation) {
-            console.log('    cannot do it');
+            logger.log('    cannot do it');
             return null;
         }
 
         var verticalJump = currentFixation.y - firstLineFixation.y;
         if ( minMarginY < verticalJump && verticalJump < maxMarginY) {
-            console.log('    is below the current', verticalJump);
+            logger.log('    is below the current', verticalJump);
             return firstLineFixation.word.line;
         }
 
@@ -5412,6 +5496,8 @@
         init: function (_settings, _commons) {
             settings = _settings;
             commons = _commons;
+
+            logger = root.GazeTargets.Logger;
         },
 
         feed: function (targets, x, y, fixationDuration) {
@@ -5433,7 +5519,7 @@
             var mapped = lastMapped;
 
             if (newFixation) {
-                console.log(x, y);
+                logger.log(x, y);
                 var dx = x - prevFixX;
                 var dy = y - prevFixY;
                 var saccade = Math.sqrt(dx * dx + dy * dy);
@@ -5448,7 +5534,7 @@
 
                 mapped = map(x, y + yOffset);
 
-                //console.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
+                //logger.log("new fix: " + dx + "," + dy + " = " + saccade + " : " + (isReadingFixation ? "reading" : "-"));
             }
 
             lastMapped = mapped;
@@ -5474,6 +5560,8 @@
     // internal
     var settings;
     var commons;
+
+    var logger;
 
     var lines = [];
     var lineSpacing;
@@ -5514,7 +5602,7 @@
                 currentLine.addWord(rect, target);
             }
 
-//                console.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
+//                logger.log('{ left: ' + Math.round(rect.left) + ', top: ' + Math.round(rect.top) + ', right: ' + Math.round(rect.right) + ', bottom: ' + Math.round(rect.bottom) + ' }');
         }
 
         if (lines.length > 1) {
@@ -5631,10 +5719,12 @@
             readingMarginY = (settings.readingMarginY || 1.5) * lineHeight;
             neutralMarginY = (settings.neutralMarginY || 3) * lineHeight;
             slope = settings.slope || 0.1;
+
+            logger = root.GazeTargets.Logger;
         },
 
         match: function (saccade) {
-            //console.log('zone search', saccade.x, saccade.y);
+            //logger.log('zone search', saccade.x, saccade.y);
             var zone = this.nonreading;
 
             if (isInsideBox( readingMarginY, saccade)) {
@@ -5663,11 +5753,13 @@
     var neutralMarginY;
     var slope;
 
+    var logger;
+
     function isInsideProgressive(marginY, saccade)
     {
         var heightDelta = saccade.x * slope;
         var margin = marginY + heightDelta;
-        //console.log('is Inside Progressive?', progressiveLeft, progressiveRight, -margin, margin);
+        //logger.log('is Inside Progressive?', progressiveLeft, progressiveRight, -margin, margin);
         return progressiveLeft < saccade.x && saccade.x < progressiveRight && 
                -margin < saccade.y && saccade.y < margin;
     }
@@ -5676,7 +5768,7 @@
     {
         var heightDelta = -saccade.x * slope;
         var margin = marginY + heightDelta;
-        //console.log('is Inside Regressive?', regressiveLeft, regressiveRight, -margin, margin);
+        //logger.log('is Inside Regressive?', regressiveLeft, regressiveRight, -margin, margin);
         return regressiveLeft < saccade.x && saccade.x < 0 && 
                -margin < saccade.y && saccade.y < margin;
     }
