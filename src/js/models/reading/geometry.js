@@ -25,14 +25,14 @@
         },
 
         reset: function () {
-            lines.forEach(function (line) {
-                line.forEach(function (w) {
-                    logger.log('new Word({ left: ' + w.rect.left + 
-                        ', top: ' + w.rect.top + 
-                        ', right: ' + w.rect.right + 
-                        ', bottom: ' + w.rect.bottom + ' }),');
-                });
-            });
+            // lines.forEach(function (line) {
+            //     line.forEach(function (w) {
+            //         logger.log('new Word({ left: ' + w.rect.left + 
+            //             ', top: ' + w.rect.top + 
+            //             ', right: ' + w.rect.right + 
+            //             ', bottom: ' + w.rect.bottom + ' }),');
+            //     });
+            // });
             lines = [];
             lineSpacing = 0;
             lineHeight = 0;
@@ -75,7 +75,7 @@
                         lineWidth = currentLine.right - currentLine.left;
                     }
                 }
-                currentLine = new Line(rect, target);
+                currentLine = new Line(rect, target, lines.length, lines[lines.length - 1]);
                 lines.push(currentLine);
                 lineY = rect.top;
             }
@@ -105,7 +105,7 @@
     }
 
     // Line object
-    function Line(word, dom) {
+    function Line(word, dom, index, prevLine) {
         this.left = word.left;
         this.top = word.top;
         this.right = word.right;
@@ -113,6 +113,13 @@
 
         this.words = [];
         this.words.push(new Word(word, dom, this));
+
+        this.index = index;
+        this.previous = prevLine;
+        this.next = null;
+        if (this.previous) {
+            this.previous.next = this;
+        }
     }
 
     Line.prototype.add = function (word, dom) {
@@ -130,7 +137,12 @@
         this.rect = rect;
         this.dom = dom;
         this.line = line;
+        this.index = line.words.length;
     }
+
+    Word.prototype.toString = function () {
+        return this.rect.left + ',' + this.rect.top + ' / ' + this.line.index;
+    };
 
     // Publication
     if (!root.GazeTargets) {

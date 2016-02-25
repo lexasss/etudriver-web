@@ -42,13 +42,14 @@
 
             var mapped = lastMapped;
 
-            var newFixation = fixations.feed(x, y + offset, fixationDuration);
+            var newFixation = fixations.feed(x, y, fixationDuration);
             if (newFixation) {
 
+                logger.log( newFixation.toString() );
                 var newLine = classifySaccadeZone( newFixation );
 
                 var switched = updateMode();
-                currentLine = linePredictor.get( switched, newLine, newFixation);
+                currentLine = linePredictor.get( switched, newLine, newFixation, offset);
 
                 updateOffset( newFixation, currentLine );
 
@@ -82,6 +83,10 @@
             offset = 0;
             currentLine = null;
             lastMapped = null;
+        },
+
+        currentWord: function () {
+            return lastMapped;
         }
     };
 
@@ -125,7 +130,7 @@
 
     function classifySaccadeZone(currentFixation) {
         
-        var newLine = newLineDetector.search( currentFixation );
+        var newLine = newLineDetector.search( currentFixation, offset );
 
         var guessedZone;
         if (newLine) {
@@ -133,10 +138,10 @@
             currentFixation.saccade.newLine = true;
         }
         else {
-            newLine = null;
             guessedZone = zone.match( currentFixation.saccade );
         }
 
+        logger.log( 'zone', guessedZone );
         currentFixation.saccade.zone = guessedZone;
         updateScores(guessedZone);
 
@@ -152,7 +157,7 @@
                 break;
             case zone.neutral:
                 logger.log('in neutral zone');
-                scoreNonReading++;
+                //scoreNonReading++;
                 break;
             default:
                 logger.log('in nonreading zone');
@@ -190,7 +195,10 @@
     }
 
     function updateOffset( fixation, line ) {
-        offset = (line.bottom - line.top) / 2 - (fixation.y - offset);
+        if (isReadingMode) {
+            //offset = (line.bottom + line.top) / 2 - fixation.y;
+            logger.log('offset', offset);
+        }
     }
 
     function map(fixation, line) {
@@ -224,7 +232,7 @@
             }
         }
 
-        logger.log('map: search', minDist);
+        logger.log('map: [d=', minDist, ']', result ? result.line.index + ',' + result.index : '' );
         return result;
     }
 

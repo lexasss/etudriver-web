@@ -39,14 +39,24 @@
             }
         },
 
+        header: function (_header) {
+            if (_header !== undefined) {
+                header = _header;
+            }
+            else {
+                return header;
+            }
+        },
+
         Level: {
             silent: 'silent',
+            info: 'info',
             debug: 'debug'
         },
 
         Type: {
-            debug: Symbol('debug'),     // default
-            info: Symbol('info'),       // info
+            info: Symbol('info'),       // default
+            debug: Symbol('debug'),
             error: Symbol('error')
         }
     };

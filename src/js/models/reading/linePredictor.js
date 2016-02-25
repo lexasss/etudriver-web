@@ -12,14 +12,14 @@
             logger = root.GazeTargets.Logger;
         },
 
-        get: function(switched, newLine, currentFixation) {
+        get: function(switched, newLine, currentFixation, offset) {
             var result = null;
             if (newLine) {
                 result = newLine;
-                logger.log('current line is the new line');
+                logger.log('current line is the new line (' + newLine.index + ')');
             }
             else if (switched.toReading) {
-                result = guessCurrentLine( currentFixation );
+                result = guessCurrentLine( currentFixation, offset );
             }
             else if (switched.toNonReading) {
                 result = null;
@@ -29,8 +29,8 @@
                 var previousFixation = currentFixation.previous;
                 result = previousFixation && previousFixation.word ? 
                     previousFixation.word.line : 
-                    getClosestLine( currentFixation);
-                logger.log('previous fixation line?');
+                    getClosestLine( currentFixation, offset );
+                logger.log('previous fixation line? ' + (result ? result.index : 'no'));
             }
 
             return result;
@@ -45,39 +45,36 @@
     var geomModel;
     var logger;
 
-    function guessCurrentLine(currentFixation) {
+    function guessCurrentLine(currentFixation, offset) {
         var result = null;
         
         // first search the fixations already mapped
         if (currentFixation) {
-            result = guessNearestLineFromPreviousFixations( currentFixation );
+            result = guessNearestLineFromPreviousFixations( currentFixation, offset );
             logger.log('guessed line from prev fixation', result);
         }
 
         // then just map lines naively
         if (!result) {
-            result = getClosestLine( currentFixation );
-            logger.log('just taking the closest line', result.top);
+            result = getClosestLine( currentFixation, offset );
+            logger.log('just taking the closest line', result.index);
         }
 
         return result;
     }
 
-    function guessNearestLineFromPreviousFixations( currentFixation ) {
+    function guessNearestLineFromPreviousFixations( currentFixation, offset ) {
         var minDist = Number.MAX_VALUE;
-        var closestFixation = null;
-        var dx, dy, dist;
+        var dist, closestFixation = null;
 
         var fixation = currentFixation.previous;
         while (fixation) {
 
             if (fixation.word) {
-                dx = currentFixation.x - fixation.x;
-                dy = currentFixation.y - fixation.y;
-                dist = Math.sqrt(dx * dx + dy * dy);
+                dist = Math.abs( currentFixation.y + offset - fixation.word.line.top );
                 if (dist < minDist) {
                     minDist = dist;
-                    closestFixation = fix;
+                    closestFixation = fixation;
                 }
             }
 
@@ -87,7 +84,7 @@
         return closestFixation && (minDist < geomModel.lineSpacing / 2) ? closestFixation.word.line : null;
     }
 
-    function getClosestLine( fixation ) {
+    function getClosestLine( fixation, offset ) {
 
         var result = null;
         var minDist = Number.MAX_VALUE;
@@ -96,7 +93,7 @@
         var lines = geomModel.lines;
         for (var i = 0; i < lines.length; ++i) {
             line = lines[i];
-            dist = Math.abs((line.top + line.bottom) / 2 - fixation.y);
+            dist = Math.abs( fixation.y + offset - (line.top + line.bottom) / 2 );
             if (dist < minDist) {
                 minDist = dist;
                 result = line;

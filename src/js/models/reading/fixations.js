@@ -10,7 +10,6 @@
     var Fixations = {
 
         init: function () {
-            lastFixation = null;
             currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
             
             zones = GazeTargets.Models.Reading.Zone;
@@ -20,12 +19,11 @@
         feed: function (x, y, duration) {
 
             if (currentFixation.duration > duration) {
-                currentFixation = new Fixation(x, y, duration);
-                currentFixation.previous = lastFixation;
+                var fixation = new Fixation(x, y, duration);
+                fixation.previous = currentFixation;
+                fixation.saccade = new Saccade(x - currentFixation.x, y - currentFixation.y);
                 
-                lastFixation = currentFixation;
-                currentFixation.saccade = new Saccade(x - lastFixation.x, y - lastFixation.y);
-                
+                currentFixation = fixation;
                 fixations.push( currentFixation );
                 
                 return currentFixation;
@@ -45,7 +43,6 @@
             // });
             fixations.length = 0;
 
-            lastFixation = null;
             currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
         },
 
@@ -57,7 +54,6 @@
     // internal
     var fixations = [];
 
-    var lastFixation;
     var currentFixation;
 
     var zones;
@@ -73,6 +69,11 @@
         this.previous = null;
     }
 
+    Fixation.prototype.toString = function () {
+        return 'FIX ' + this.x + ',' + this.y + ' / ' + this.duration +
+            'ms S=[' + this.saccade + '], W=[' + this.word + ']';
+    };
+
     // Saccade
     function Saccade(x, y) {
         this.x = x;
@@ -80,6 +81,10 @@
         this.zone = zones.nonreading;
         this.newLine = false;
     }
+
+    Saccade.prototype.toString = function () {
+        return this.x + ',' + this.y + ' / ' + this.zone + ',' + this.newLine;
+    };
 
     // Publication
     if (!root.GazeTargets) {
@@ -96,5 +101,6 @@
 
     root.GazeTargets.Models.Reading.Fixations = Fixations;
     root.GazeTargets.Models.Reading.Fixation = Fixation;
+    root.GazeTargets.Models.Reading.Saccade = Saccade;
 
 })(window);

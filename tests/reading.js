@@ -15,7 +15,9 @@ if (window.QUnit) {
 
     var GeomLine = window.GazeTargets.Models.Reading.Geometry.Line;
     var GeomWord = window.GazeTargets.Models.Reading.Geometry.Word;
+    var Fixations = window.GazeTargets.Models.Reading.Fixations;
     var Fixation = window.GazeTargets.Models.Reading.Fixation;
+    var Saccade = window.GazeTargets.Models.Reading.Saccade;
 
     function randomInRange(min, max) {
         return Math.random() * (max - min) + min;
@@ -23,13 +25,14 @@ if (window.QUnit) {
     
     var createProperLayot = function(layout) {
         var line = null;
+        var lineIndex = 0;
         var words = layout.map( function(word) {
             if (!line) {
-                line = new GeomLine(word);
+                line = new GeomLine( word, null, lineIndex++, null );
             }
 
             if (line.top != word.top) {
-                line = new GeomLine(word);
+                line = new GeomLine( word, null, lineIndex++, line );
             }
             else {
                 line.add(word);
@@ -217,7 +220,7 @@ if (window.QUnit) {
         new Word({ left: 510, top: 583, right: 581, bottom: 611 })
     ];
 
-    var data1 = [
+    var simulated = [
         { x: 67, y: 151 },
         { x: 105, y: 151 },
         { x: 161, y: 151 },
@@ -245,7 +248,7 @@ if (window.QUnit) {
         { x: 459, y: 199 }
     ];
 
-    var data2 = [
+    var mouse = [
         { x: 53, y: 108 },
         { x: 157, y: 101 },
         { x: 243, y: 92 },
@@ -281,6 +284,357 @@ if (window.QUnit) {
         { x: 1105, y: 200 },
     ];
 
+    var nonreading = [
+        { x: 170, y: 194, d: 833 },
+        { x: 238, y: 75, d: 400 },
+        { x: 322, y: 237, d: 400 },
+        { x: 327, y: 224, d: 52 },
+        { x: 376, y: -16, d: 267 },
+        { x: 459, y: -27, d: 500 },
+        { x: 524, y: 78, d: 200 },
+    ];
+
+    var layout2 = [
+        new Word({ left: 66.66667175292969, top: 76, right: 97.33332824707031, bottom: 104 }),
+        new Word({ left: 103.33332824707031, top: 76, right: 147.3333282470703, bottom: 104 }),
+        new Word({ left: 153.3333282470703, top: 76, right: 201.3333282470703, bottom: 104 }),
+        new Word({ left: 207.3333282470703, top: 76, right: 262.6499938964844, bottom: 104 }),
+        new Word({ left: 268.6499938964844, top: 76, right: 303.3500061035156, bottom: 104 }),
+        new Word({ left: 309.3500061035156, top: 76, right: 353.3500061035156, bottom: 104 }),
+        new Word({ left: 359.3500061035156, top: 76, right: 392.21665954589844, bottom: 104 }),
+        new Word({ left: 398.2166748046875, top: 76, right: 431.5666809082031, bottom: 104 }),
+        new Word({ left: 437.566650390625, top: 76, right: 469.566650390625, bottom: 104 }),
+        new Word({ left: 475.566650390625, top: 76, right: 527.5499877929688, bottom: 104 }),
+        new Word({ left: 533.5499877929688, top: 76, right: 596.2499847412109, bottom: 104 }),
+        new Word({ left: 602.25, top: 76, right: 632.8999938964844, bottom: 104 }),
+        new Word({ left: 638.9000244140625, top: 76, right: 727.7833709716797, bottom: 104 }),
+        new Word({ left: 733.7833251953125, top: 76, right: 806.4499816894531, bottom: 104 }),
+        new Word({ left: 812.4500122070312, top: 76, right: 849.7666778564453, bottom: 104 }),
+        new Word({ left: 66.66667175292969, top: 124, right: 124.64999389648438, bottom: 152 }),
+        new Word({ left: 130.64999389648438, top: 124, right: 173.3333282470703, bottom: 152 }),
+        new Word({ left: 179.3333282470703, top: 124, right: 212.1999969482422, bottom: 152 }),
+        new Word({ left: 218.1999969482422, top: 124, right: 314.8000030517578, bottom: 152 }),
+        new Word({ left: 320.79998779296875, top: 124, right: 352.79998779296875, bottom: 152 }),
+        new Word({ left: 358.79998779296875, top: 124, right: 408.1166534423828, bottom: 152 }),
+        new Word({ left: 414.1166687011719, top: 124, right: 446.98333740234375, bottom: 152 }),
+        new Word({ left: 452.98333740234375, top: 124, right: 524.3333282470703, bottom: 152 }),
+        new Word({ left: 530.3333129882812, top: 124, right: 567.6499786376953, bottom: 152 }),
+        new Word({ left: 573.6500244140625, top: 124, right: 637.6333618164062, bottom: 152 }),
+        new Word({ left: 643.63330078125, top: 124, right: 687.63330078125, bottom: 152 }),
+        new Word({ left: 693.63330078125, top: 124, right: 726.4999694824219, bottom: 152 }),
+        new Word({ left: 732.5, top: 124, right: 757.8500061035156, bottom: 152 }),
+        new Word({ left: 763.8499755859375, top: 124, right: 816.7166290283203, bottom: 152 }),
+        new Word({ left: 822.7166748046875, top: 124, right: 869.4166870117188, bottom: 152 }),
+        new Word({ left: 66.66667175292969, top: 172, right: 113.31666564941406, bottom: 200 }),
+        new Word({ left: 119.31666564941406, top: 172, right: 175.3333282470703, bottom: 200 }),
+        new Word({ left: 181.3333282470703, top: 172, right: 201.35000610351562, bottom: 200 }),
+        new Word({ left: 207.35000610351562, top: 172, right: 239.35000610351562, bottom: 200 }),
+        new Word({ left: 245.35000610351562, top: 172, right: 284.71665954589844, bottom: 200 }),
+        new Word({ left: 290.7166748046875, top: 172, right: 328.0333557128906, bottom: 200 }),
+        new Word({ left: 334.0333251953125, top: 172, right: 404.0166473388672, bottom: 200 }),
+        new Word({ left: 410.01666259765625, top: 172, right: 452.6999969482422, bottom: 200 }),
+        new Word({ left: 458.70001220703125, top: 172, right: 491.5666809082031, bottom: 200 }),
+        new Word({ left: 497.566650390625, top: 172, right: 587.5499877929688, bottom: 200 }),
+        new Word({ left: 593.5499877929688, top: 172, right: 637.5499877929688, bottom: 200 }),
+        new Word({ left: 643.5499877929688, top: 172, right: 676.4166564941406, bottom: 200 }),
+        new Word({ left: 682.4166870117188, top: 172, right: 795.9833526611328, bottom: 200 }),
+        new Word({ left: 801.9833374023438, top: 172, right: 839.3333282470703, bottom: 200 }),
+        new Word({ left: 845.3333129882812, top: 172, right: 870.6666564941406, bottom: 200 }),
+        new Word({ left: 66.66667175292969, top: 220, right: 118.64999389648438, bottom: 248 }),
+        new Word({ left: 124.64999389648438, top: 220, right: 173.96665954589844, bottom: 248 }),
+        new Word({ left: 179.96665954589844, top: 220, right: 212.8333282470703, bottom: 248 }),
+        new Word({ left: 218.8333282470703, top: 220, right: 279.5, bottom: 248 }),
+        new Word({ left: 285.5, top: 220, right: 373.53334045410156, bottom: 248 }),
+        new Word({ left: 379.5333251953125, top: 220, right: 434.1999816894531, bottom: 248 }),
+        new Word({ left: 440.20001220703125, top: 220, right: 477.5333557128906, bottom: 248 }),
+        new Word({ left: 483.5333251953125, top: 220, right: 531.5333251953125, bottom: 248 }),
+        new Word({ left: 537.5333251953125, top: 220, right: 586.8499908447266, bottom: 248 }),
+        new Word({ left: 592.8499755859375, top: 220, right: 614.1833038330078, bottom: 248 }),
+        new Word({ left: 620.183349609375, top: 220, right: 645.5333557128906, bottom: 248 }),
+        new Word({ left: 651.5333251953125, top: 220, right: 687.5333251953125, bottom: 248 }),
+        new Word({ left: 693.5333251953125, top: 220, right: 730.8333129882812, bottom: 248 }),
+        new Word({ left: 736.8333129882812, top: 220, right: 771.5166473388672, bottom: 248 }),
+        new Word({ left: 777.5166625976562, top: 220, right: 847.5166625976562, bottom: 248 }),
+        new Word({ left: 853.5166625976562, top: 220, right: 876.1999969482422, bottom: 248 }),
+        new Word({ left: 66.66667175292969, top: 268, right: 102.66667175292969, bottom: 296 }),
+        new Word({ left: 108.66667175292969, top: 268, right: 128.6666717529297, bottom: 296 }),
+        new Word({ left: 134.6666717529297, top: 268, right: 166.6666717529297, bottom: 296 }),
+        new Word({ left: 172.6666717529297, top: 268, right: 221.98333740234375, bottom: 296 }),
+        new Word({ left: 227.98333740234375, top: 268, right: 237.31666564941406, bottom: 296 }),
+        new Word({ left: 243.31666564941406, top: 268, right: 291.3333282470703, bottom: 296 }),
+        new Word({ left: 297.33331298828125, top: 268, right: 321.33331298828125, bottom: 296 }),
+        new Word({ left: 327.33331298828125, top: 268, right: 390.6833190917969, bottom: 296 }),
+        new Word({ left: 396.683349609375, top: 268, right: 419.36668395996094, bottom: 296 }),
+        new Word({ left: 425.3666687011719, top: 268, right: 461.3666687011719, bottom: 296 }),
+        new Word({ left: 467.3666687011719, top: 268, right: 487.3666687011719, bottom: 296 }),
+        new Word({ left: 493.3666687011719, top: 268, right: 545.3666687011719, bottom: 296 }),
+        new Word({ left: 551.36669921875, top: 268, right: 560.7000274658203, bottom: 296 }),
+        new Word({ left: 566.7000122070312, top: 268, right: 614.7166748046875, bottom: 296 }),
+        new Word({ left: 620.7166748046875, top: 268, right: 644.7166748046875, bottom: 296 }),
+        new Word({ left: 650.7166748046875, top: 268, right: 746.1000213623047, bottom: 296 }),
+        new Word({ left: 752.0999755859375, top: 268, right: 796.13330078125, bottom: 296 }),
+        new Word({ left: 802.13330078125, top: 268, right: 823.4666290283203, bottom: 296 }),
+        new Word({ left: 829.4666748046875, top: 268, right: 844.1333465576172, bottom: 296 }),
+        new Word({ left: 66.66667175292969, top: 316, right: 104, bottom: 344 }),
+        new Word({ left: 110, top: 316, right: 134, bottom: 344 }),
+        new Word({ left: 140, top: 316, right: 161.3333282470703, bottom: 344 }),
+        new Word({ left: 167.3333282470703, top: 316, right: 182, bottom: 344 }),
+        new Word({ left: 188, top: 316, right: 213.3333282470703, bottom: 344 }),
+        new Word({ left: 219.3333282470703, top: 316, right: 251.3333282470703, bottom: 344 }),
+        new Word({ left: 257.33331298828125, top: 316, right: 306.6499786376953, bottom: 344 }),
+        new Word({ left: 312.6499938964844, top: 316, right: 349.98333740234375, bottom: 344 }),
+        new Word({ left: 355.98333740234375, top: 316, right: 379.98333740234375, bottom: 344 }),
+        new Word({ left: 385.98333740234375, top: 316, right: 475.3666687011719, bottom: 344 }),
+        new Word({ left: 481.3666687011719, top: 316, right: 536.0500030517578, bottom: 344 }),
+        new Word({ left: 542.0499877929688, top: 316, right: 579.3999786376953, bottom: 344 }),
+        new Word({ left: 585.4000244140625, top: 316, right: 629.4167022705078, bottom: 344 }),
+        new Word({ left: 635.4166870117188, top: 316, right: 655.4166870117188, bottom: 344 }),
+        new Word({ left: 661.4166870117188, top: 316, right: 693.4166870117188, bottom: 344 }),
+        new Word({ left: 699.4166870117188, top: 316, right: 734.1000213623047, bottom: 344 }),
+        new Word({ left: 740.0999755859375, top: 316, right: 760.0999755859375, bottom: 344 }),
+        new Word({ left: 766.0999755859375, top: 316, right: 877.4833068847656, bottom: 344 }),
+        new Word({ left: 66.66667175292969, top: 364, right: 110.68333435058594, bottom: 392 }),
+        new Word({ left: 116.68333435058594, top: 364, right: 160.03334045410156, bottom: 392 }),
+        new Word({ left: 166.03334045410156, top: 364, right: 203.36666870117188, bottom: 392 }),
+        new Word({ left: 209.36666870117188, top: 364, right: 257.3666687011719, bottom: 392 }),
+        new Word({ left: 263.3666687011719, top: 364, right: 312.68333435058594, bottom: 392 }),
+        new Word({ left: 318.683349609375, top: 364, right: 360.0333557128906, bottom: 392 }),
+        new Word({ left: 366.0333251953125, top: 364, right: 402.0333251953125, bottom: 392 }),
+        new Word({ left: 408.0333251953125, top: 364, right: 473.3999786376953, bottom: 392 }),
+        new Word({ left: 479.3999938964844, top: 364, right: 523.4333343505859, bottom: 392 }),
+        new Word({ left: 529.433349609375, top: 364, right: 584.1166839599609, bottom: 392 }),
+        new Word({ left: 590.11669921875, top: 364, right: 638.11669921875, bottom: 392 }),
+        new Word({ left: 644.11669921875, top: 364, right: 715.6500244140625, bottom: 392 }),
+        new Word({ left: 721.6500244140625, top: 364, right: 737.6500244140625, bottom: 392 }),
+        new Word({ left: 743.6500244140625, top: 364, right: 848.9500274658203, bottom: 392 }),
+        new Word({ left: 66.66667175292969, top: 412, right: 119.98333740234375, bottom: 440 }),
+        new Word({ left: 125.98333740234375, top: 412, right: 200.64999389648438, bottom: 440 }),
+        new Word({ left: 206.64999389648438, top: 412, right: 231.98333740234375, bottom: 440 }),
+        new Word({ left: 237.98333740234375, top: 412, right: 326.8500061035156, bottom: 440 }),
+        new Word({ left: 332.8500061035156, top: 412, right: 370.1999969482422, bottom: 440 }),
+        new Word({ left: 376.20001220703125, top: 412, right: 413.5333557128906, bottom: 440 }),
+        new Word({ left: 419.5333251953125, top: 412, right: 443.5333251953125, bottom: 440 }),
+        new Word({ left: 449.5333251953125, top: 412, right: 525.5333251953125, bottom: 440 }),
+        new Word({ left: 531.5333251953125, top: 412, right: 572.8833160400391, bottom: 440 }),
+        new Word({ left: 578.88330078125, top: 412, right: 616.2333068847656, bottom: 440 }),
+        new Word({ left: 622.2333374023438, top: 412, right: 670.2333374023438, bottom: 440 }),
+        new Word({ left: 676.2333374023438, top: 412, right: 745.6166687011719, bottom: 440 }),
+        new Word({ left: 751.61669921875, top: 412, right: 800.2666931152344, bottom: 440 }),
+        new Word({ left: 806.2666625976562, top: 412, right: 846.2833404541016, bottom: 440 }),
+        new Word({ left: 66.66667175292969, top: 460, right: 104, bottom: 488 }),
+        new Word({ left: 110, top: 460, right: 179.3333282470703, bottom: 488 }),
+        new Word({ left: 185.3333282470703, top: 460, right: 209.3333282470703, bottom: 488 }),
+        new Word({ left: 215.3333282470703, top: 460, right: 247.3333282470703, bottom: 488 }),
+        new Word({ left: 253.3333282470703, top: 460, right: 322, bottom: 488 }),
+        new Word({ left: 328, top: 460, right: 368.01666259765625, bottom: 488 }),
+        new Word({ left: 374.01666259765625, top: 460, right: 411.3500061035156, bottom: 488 }),
+        new Word({ left: 417.3500061035156, top: 460, right: 468.03334045410156, bottom: 488 }),
+        new Word({ left: 474.0333251953125, top: 460, right: 494.0333251953125, bottom: 488 }),
+        new Word({ left: 500.0333251953125, top: 460, right: 557.3999786376953, bottom: 488 }),
+        new Word({ left: 563.4000244140625, top: 460, right: 608.7500305175781, bottom: 488 }),
+        new Word({ left: 614.75, top: 460, right: 651.3999938964844, bottom: 488 }),
+        new Word({ left: 657.4000244140625, top: 460, right: 701.4333648681641, bottom: 488 }),
+        new Word({ left: 707.433349609375, top: 460, right: 744.7833557128906, bottom: 488 }),
+        new Word({ left: 750.7833251953125, top: 460, right: 788.1166534423828, bottom: 488 }),
+        new Word({ left: 66.66667175292969, top: 508, right: 173.3000030517578, bottom: 536 }),
+        new Word({ left: 179.3000030517578, top: 508, right: 228.64999389648438, bottom: 536 }),
+        new Word({ left: 234.64999389648438, top: 508, right: 282.6499938964844, bottom: 536 }),
+        new Word({ left: 288.6499938964844, top: 508, right: 373.3500061035156, bottom: 536 }),
+        new Word({ left: 379.3500061035156, top: 508, right: 406.68333435058594, bottom: 536 }),
+        new Word({ left: 412.683349609375, top: 508, right: 443.3333435058594, bottom: 536 }),
+        new Word({ left: 449.33331298828125, top: 508, right: 490.6833190917969, bottom: 536 }),
+        new Word({ left: 496.683349609375, top: 508, right: 600.9000091552734, bottom: 536 }),
+        new Word({ left: 606.9000244140625, top: 508, right: 624.2333679199219, bottom: 536 }),
+        new Word({ left: 630.2333374023438, top: 508, right: 667.5666656494141, bottom: 536 }),
+        new Word({ left: 673.566650390625, top: 508, right: 697.566650390625, bottom: 536 }),
+        new Word({ left: 703.566650390625, top: 508, right: 724.8999786376953, bottom: 536 }),
+        new Word({ left: 730.9000244140625, top: 508, right: 751.5666961669922, bottom: 536 }),
+        new Word({ left: 757.566650390625, top: 508, right: 777.5833129882812, bottom: 536 }),
+        new Word({ left: 783.5833129882812, top: 508, right: 836.8999786376953, bottom: 536 }),
+        new Word({ left: 842.9000244140625, top: 508, right: 862.9000244140625, bottom: 536 }),
+        new Word({ left: 66.66667175292969, top: 556, right: 98.66667175292969, bottom: 584 }),
+        new Word({ left: 104.66667175292969, top: 556, right: 159.98333740234375, bottom: 584 }),
+        new Word({ left: 165.98333740234375, top: 556, right: 175.31666564941406, bottom: 584 }),
+        new Word({ left: 181.31666564941406, top: 556, right: 220.01666259765625, bottom: 584 }),
+        new Word({ left: 226.01666259765625, top: 556, right: 280.68333435058594, bottom: 584 }),
+        new Word({ left: 286.683349609375, top: 556, right: 324.0333557128906, bottom: 584 }),
+        new Word({ left: 330.0333251953125, top: 556, right: 342.0333251953125, bottom: 584 }),
+        new Word({ left: 348.0333251953125, top: 556, right: 400.8999786376953, bottom: 584 }),
+        new Word({ left: 406.8999938964844, top: 556, right: 488.25, bottom: 584 }),
+        new Word({ left: 494.25, top: 556, right: 514.25, bottom: 584 }),
+        new Word({ left: 520.25, top: 556, right: 566.8999938964844, bottom: 584 }),
+        new Word({ left: 572.9000244140625, top: 556, right: 619.5666961669922, bottom: 584 }),
+        new Word({ left: 625.566650390625, top: 556, right: 666.9166564941406, bottom: 584 }),
+        new Word({ left: 672.9166870117188, top: 556, right: 727.6000213623047, bottom: 584 }),
+        new Word({ left: 733.5999755859375, top: 556, right: 776.2833099365234, bottom: 584 }),
+        new Word({ left: 782.2833251953125, top: 556, right: 802.2833251953125, bottom: 584 }),
+        new Word({ left: 808.2833251953125, top: 556, right: 871.6499786376953, bottom: 584 }),
+    ];
+
+    var fix_progressive = [
+        { x: -62, y: -99, d: 701 },
+        { x: 117, y: -133, d: 167 },
+        { x: 123, y: -96, d: 733 },
+        { x: 185, y: -62, d: 634 },
+        { x: 293, y: -40, d: 601 },
+        { x: 399, y: -20, d: 534 },
+        { x: 458, y: -19, d: 499 },
+        { x: 542, y: -9, d: 466 },
+        { x: 664, y: -24, d: 433 },
+        { x: -62, y: -181, d: 400 },
+//        { x: 671, y: 188, d: 133 },
+        { x: 734, y: 1, d: 367 },
+        { x: 800, y: -29, d: 433 },
+        { x: 107, y: 8, d: 566 },
+        { x: 175, y: 56, d: 500 },
+        { x: 295, y: 36, d: 533 },
+        { x: 357, y: 65, d: 666 },
+        { x: 461, y: 59, d: 766 },
+        { x: -62, y: -238, d: 100 },
+//        { x: 483, y: 267, d: 267 },
+        { x: 562, y: 19, d: 533 },
+        { x: -62, y: -206, d: 381 },
+//        { x: 581, y: 253, d: 100 },
+        { x: 661, y: 12, d: 634 },
+        { x: 691, y: 48, d: 252 },
+        { x: 791, y: 25, d: 667 },
+        { x: 63, y: 35, d: 500 },
+        { x: 146, y: 45, d: 800 },
+        { x: 270, y: 20, d: 200 },
+        { x: 337, y: 37, d: 633 },
+        { x: 449, y: 13, d: 334 },
+        { x: 511, y: 31, d: 519 },
+        { x: 616, y: 20, d: 267 },
+        { x: 688, y: 1, d: 467 },
+        { x: 794, y: -7, d: 800 },
+        { x: 94, y: 53, d: 467 },
+        { x: 170, y: 18, d: 300 },
+        { x: 236, y: 31, d: 718 },
+        { x: 331, y: 7, d: 266 },
+        { x: 393, y: 13, d: 666 },
+        { x: 464, y: 33, d: 635 },
+        { x: -62, y: -312, d: 100 },
+//        { x: 532, y: 342, d: 133 },
+        { x: 612, y: 8, d: 401 },
+        { x: -62, y: -308, d: 233 },
+//        { x: 628, y: 338, d: 401 },
+        { x: 695, y: 10, d: 501 },
+        { x: 802, y: 14, d: 67 },
+        { x: -62, y: -306, d: 305 },
+//        { x: 802, y: 334, d: 433 },
+    ];
+
+    var fix_regressive = [
+        { x: -62, y: -99, d: 634 },
+        { x: 139, y: 217, d: 132 },
+        { x: 96, y: -14, d: 301 },
+        { x: 130, y: 69, d: 466 },
+        { x: 207, y: 18, d: 466 },
+        { x: 307, y: 15, d: 466 },
+        { x: 414, y: 4, d: 799 },
+        { x: 475, y: -19, d: 500 },
+        { x: 600, y: -7, d: 433 },
+        { x: 701, y: -3, d: 166 },
+        { x: -62, y: -140, d: 134 },
+        { x: 707, y: 16, d: 100 },
+        { x: -62, y: -138, d: 399 },
+        { x: 803, y: 14, d: 267 },
+        { x: -62, y: -126, d: 367 },
+        { x: 807, y: 18, d: 265 },
+        { x: 195, y: 14, d: 567 },
+        { x: 243, y: 22, d: 667 },
+        { x: 316, y: 13, d: 267 },
+        { x: 371, y: 15, d: 429 },
+        { x: 484, y: 13, d: 400 },
+        { x: 542, y: 17, d: 399 },
+        { x: 633, y: -4, d: 500 },
+        { x: 746, y: -2, d: 265 },
+        { x: -62, y: -156, d: 200 },
+        { x: -62, y: 14, d: 334 },
+        { x: 749, y: 19, d: 300 },
+        { x: 141, y: 17, d: 701 },
+        { x: 208, y: 47, d: 567 },
+        { x: 309, y: 15, d: 432 },
+        { x: 429, y: 25, d: 233 },
+        { x: 446, y: 48, d: 500 },
+        { x: 556, y: 26, d: 165 },
+        { x: 672, y: 14, d: 433 },
+        { x: 777, y: -5, d: 700 },
+    ];
+
+    var fix_lineup = [
+        { x: -62, y: -99, d: 500 },
+        { x: 170, y: 94, d: 833 },
+        { x: 238, y: 75, d: 400 },
+        { x: -62, y: -227, d: 300 },
+        //{ x: 322, y: 237, d: 400 },
+        { x: -62, y: -209, d: 267 },
+        //{ x: 327, y: 224, d: 52 },
+        { x: 376, y: -16, d: 267 },
+        { x: 459, y: 97, d: 500 },
+        { x: -62, y: -125, d: 66 },
+        { x: 524, y: 78, d: 200 },
+        { x: 660, y: 39, d: 600 },
+        { x: 732, y: 29, d: 401 },
+        { x: 812, y: 2, d: 434 },
+        { x: -62, y: -138, d: 99 },
+        //{ x: 75, y: 224, d: 257 },
+        { x: 164, y: 19, d: 467 },
+        { x: 252, y: 25, d: 300 },
+        { x: 319, y: 0, d: 534 },
+        { x: 440, y: 9, d: 733 },
+        { x: 540, y: 40, d: 733 },
+        { x: 646, y: 11, d: 233 },
+        { x: 736, y: 10, d: 1001 },
+        { x: 227, y: 14, d: 533 },
+        { x: 222, y: 59, d: 100 },
+        { x: 239, y: 86, d: 233 },
+        { x: 265, y: 65, d: 162 },
+        { x: 291, y: 96, d: 68 },
+        { x: 380, y: 17, d: 700 },
+        { x: 448, y: -5, d: 136 },
+        { x: 447, y: -41, d: 65 },
+        { x: 465, y: -65, d: 68 },
+        { x: 530, y: -47, d: 300 },
+        { x: 632, y: -1, d: 534 },
+        { x: 764, y: -19, d: 633 },
+    ];
+
+    var fix_linedown = [
+        { x: -62, y: -99, d: 552 },
+        { x: -62, y: 14, d: 67 },
+        { x: 320, y: 177, d: 34 },
+        { x: 133, y: 84, d: 66 },
+        { x: -62, y: -219, d: 167 },
+        { x: 129, y: 256, d: 200 },
+        { x: -62, y: -228, d: 167 },
+        { x: -62, y: 14, d: 167 },
+        { x: 234, y: 275, d: 300 },
+        { x: -62, y: -247, d: 34 },
+        { x: 260, y: 274, d: 267 },
+        { x: 321, y: -4, d: 233 },
+        { x: -62, y: -228, d: 134 },
+        { x: 329, y: 254, d: 100 },
+        { x: -62, y: -226, d: 200 },
+        { x: -62, y: 14, d: 1033 },
+        { x: 452, y: 248, d: 167 },
+        { x: 594, y: 1, d: 153 },
+        { x: -62, y: -207, d: 233 },
+        { x: 602, y: 231, d: 134 },
+        { x: 704, y: 6, d: 433 },
+        { x: -62, y: -195, d: 415 },
+        { x: 710, y: 218, d: 267 },
+        { x: -62, y: -190, d: 167 },
+        { x: -62, y: 14, d: 34 },
+        { x: 725, y: 204, d: 67 },
+        { x: 595, y: -43, d: 367 },
+        { x: 586, y: 33, d: 567 },
+        { x: 658, y: 20, d: 500 },
+        { x: 749, y: 2, d: 300 },
+        { x: 803, y: -33, d: 533 },
+        { x: 237, y: -6, d: 133 },
+    ];
+
     QUnit.module( 'Logger module', {
         beforeEach: function() {
             this.logger = window.GazeTargets.Logger;
@@ -291,10 +645,13 @@ if (window.QUnit) {
     });
 
     QUnit.test( 'Logger', function( assert ) {
+        var level = this.logger.level( this.logger.Level.debug );
+        this.logger.level( this.logger.Level.debug );
         assert.ok( this.logger.log('just debugging'), 'simple debug' );
         assert.ok( this.logger.log( this.logger.Type.error, 'this is error'), 'error' );
         this.logger.level( this.logger.Level.silent );
         assert.notOk( this.logger.log('hidden text'), 'no logging' );
+        this.logger.level( level );
     });
 
     QUnit.module( 'Fixations module', {
@@ -326,8 +683,8 @@ if (window.QUnit) {
     });
 
     QUnit.test( 'Fixations', function( assert ) {
-        assert.ok( this.run( data1 ), 'test 1' );
-        assert.ok( this.run( data2 ), 'test 2' );
+        assert.ok( this.run( simulated ), 'test 1' );
+        assert.ok( this.run( mouse ), 'test 2' );
     });
 
     QUnit.module( 'Geometry module', {
@@ -371,7 +728,6 @@ if (window.QUnit) {
     QUnit.module( 'Zone module', {
         beforeEach: function() {
             this.zone = window.GazeTargets.Models.Reading.Zone;
-            this.zone.reset();
             this.run = function (data, converter, mode) {
                 
                 var result = mode == 'all' ? true : false;
@@ -386,6 +742,7 @@ if (window.QUnit) {
                     lineHeight: 28,
                     lineWidth: 1100
                 });
+                this.zone.reset();
                 console.log('################### Zone ##################');
 
                 var lastFix = { x: -10000, y: -10000 };
@@ -445,6 +802,7 @@ if (window.QUnit) {
 
     QUnit.module( 'NewLineDetector module', {
         beforeEach: function() {
+            this.logger = window.GazeTargets.Logger;
             this.newLineDetector = window.GazeTargets.Models.Reading.NewLineDetector;
             this.newLineDetector.reset();
             this.run = function (data, converter) {
@@ -505,7 +863,7 @@ if (window.QUnit) {
                         continue;
                     }
 
-                    if (this.newLineDetector.search(fixation)) {
+                    if (this.newLineDetector.search(fixation, 0)) {
                         //console.log('new line');
                         result++;
                     }
@@ -541,7 +899,7 @@ if (window.QUnit) {
                 this.linePredictor.init( geomModel );
                 console.log('################### LinePredictor ##################');
 
-                return this.linePredictor.get( switched, newLine, fixation );
+                return this.linePredictor.get( switched, newLine, fixation, 0 );
             };
         },
         afterEach: function() {
@@ -551,13 +909,17 @@ if (window.QUnit) {
     QUnit.test( 'LinePredictor', function( assert ) {
         this.geometry.init(true);
         var geomModel = this.geometry.create( layout );
+        Fixations.init();
 
-        var fixations = data1.map( function (fix, data, index) {
+        var lastFix = new Fixation(-10000, -10000, 250);
+        var fixations = simulated.map( function (fix, data, index) {
             var result = new Fixation(
                 fix.x + randomInRange(-10, 10),
                 fix.y + randomInRange(-10, 10) + randomInRange(0.05, 0.05)  * fix.x,
                 250);
             result.previous = index > 0 ? data[index - 1] : null;
+            result.saccade = new Saccade(result.x - lastFix.x, result.y - lastFix.y);
+            lastFix = result;
             return result;
         });
 
@@ -621,6 +983,7 @@ if (window.QUnit) {
 
     QUnit.module( 'Campbell module', {
         beforeEach: function() {
+            this.logger = window.GazeTargets.Logger;
             this.campbell = window.GazeTargets.Models.Reading.Campbell;
             this.campbell.init({
                 forgettingFactor: 0.2,
@@ -634,46 +997,34 @@ if (window.QUnit) {
             }, {
                 fixedText: true
             });
-            this.run = function (layout, fixations, converter) {
+            this.run = function (layout, fixations, converter, title, callback ) {
                 
-                var allCorrect = true;
-
                 this.campbell.reset();
-                console.log('################### Campbell ##################');
+                console.log('################### Campbell ' + (title ? title + ' ' : '') + '##################');
 
                 for (var i = 0; i < fixations.length; i++) {
                     
                     var fixation = fixations[i];
+
+                    if (fixation.x < -30) {
+                        continue;
+                    }
+                    console.log('---');
+                    
                     if (converter) {
                         fixation = converter(fixation);
                     }
-                    var mapped = null;
 
-                    /* simulate non-linearity
-                    fixation.x += Math.random() * 20;
-                    if (i > 0) {
-                        var errY = 0;
-                        if (fixations[i - 1].x > fixation.x) {   // line break
-                            errY = Math.random() * 30 - 10;
-                        }
-                        else {
-                            errY += Math.random() * 10 - 7;
-                        }
-                        fixation.y += errY;
-                    }*/
-                    
-                    for (j = 0; j < 2; ++j)
-                    {
-                        mapped = this.campbell.feed(layout, fixation.x, fixation.y, 250 * j);
+                    for (j = 0; j < 2; ++j) {
+                        this.campbell.feed(layout, fixation.x, fixation.y, 250 * j);
                     }
 
-                    console.log('result: ' + (mapped ? '##### ' + mapped.left : '-----------------------'));
-                    if (i > 3) {
-                        allCorrect = allCorrect && mapped;
+                    var mappedWord = this.campbell.currentWord();
+
+                    if (callback) {
+                        callback( mappedWord );
                     }
                 }
-
-                return allCorrect;
             };
         },
         afterEach: function() {
@@ -681,11 +1032,83 @@ if (window.QUnit) {
     });
 
     QUnit.test( 'Campbell', function( assert ) {
-        assert.ok( this.run(layout, data1), 'simulated data' );
-        assert.ok( this.run(layout, data2, function (fix) { 
-            return {
-                x: fix.x, 
-                y: fix.y};
-            }), 'mouse-collected data' );
+        
+        var mapped = 0;
+        var notMapped = 0;
+        this.run( layout, simulated, null, 'simulated', function (word) {
+            if (word) {
+                mapped++;
+            } else {
+                notMapped++;
+            }
+        });
+        assert.ok( mapped === 21 && notMapped === 4, 'simulated data' );
+        
+        mapped = 0;
+        notMapped = 0;
+        this.run( layout, simulated, function (fix) { return { x: fix.x, y: fix.y }; }, 'mouse', function (word) {
+            if (word) {
+                mapped++;
+            } else {
+                notMapped++;
+            }
+        });
+        assert.ok( mapped === 21 && notMapped === 4, 'mouse-collected data' );
+
+        var words = layout2;
+
+        //this.logger.level( this.logger.Level.debug );
+
+        // Progressive reading
+        var lines = [];
+        var noLine = 0;
+        for (var i = 0; i < 11; i++) { lines.push(0); }
+        this.run( words, fix_progressive, null, 'progressive', function (word) {
+            var line = word ? word.line : null;
+            if (line) {
+                lines[line.index]++;
+            } else {
+                noLine++;
+            }
+        });
+        lines.forEach( function(item, index) { console.log(index, item); } );
+        console.log('none', noLine);
+        assert.ok( lines[0] === 5 && lines[1] === 9 && lines[2] === 9 && lines[3] === 9 && noLine === 5, 'real: progressive' );
+
+        // Regressive reading
+        lines = [];
+        noLine = 0;
+        for (var i = 0; i < 11; i++) { lines.push(0); }
+        this.run( words, fix_regressive, null, 'regressive', function (word) {
+            var line = word ? word.line : null;
+            if (line) {
+                lines[line.index]++;
+            } else {
+                noLine++;
+            }
+        });
+        assert.ok( lines[0] === 22 && noLine === 7, 'real: regressive' );
+        
+        this.logger.level( this.logger.Level.debug );
+
+        // line up
+        lines = [];
+        noLine = 0;
+        for (var i = 0; i < 11; i++) { lines.push(0); }
+        this.run( words, fix_lineup, null, 'lienup', function (word) {
+            var line = word ? word.line : null;
+            if (line) {
+                lines[line.index]++;
+            } else {
+                noLine++;
+            }
+        });
+        lines.forEach( function(item, index) { console.log(index, item); } );
+        console.log('none', noLine);
+        assert.ok( lines[0] === 22 && noLine === 4, 'real: lineup' );
+        
+        assert.ok( this.run( words, fix_linedown, null, 'ld' ), 'real: linedown' );
+
+        this.logger.level( this.logger.Level.silent );
     });
 }
