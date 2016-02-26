@@ -10,10 +10,11 @@
     var Fixations = {
 
         init: function () {
-            currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
-            
             zones = GazeTargets.Models.Reading.Zone;
             logger = root.GazeTargets.Logger;
+
+            currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
+            currentFixation.saccade = new Saccade(0, 0);
         },
 
         feed: function (x, y, duration) {
@@ -44,6 +45,7 @@
             fixations.length = 0;
 
             currentFixation = new Fixation(-10000, -10000, Number.MAX_VALUE);
+            currentFixation.saccade = new Saccade(0, 0);
         },
 
         current: function() {

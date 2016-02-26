@@ -49,7 +49,7 @@
                 var newLine = classifySaccadeZone( newFixation );
 
                 var switched = updateMode();
-                currentLine = linePredictor.get( switched, newLine, newFixation, offset);
+                currentLine = linePredictor.get( switched, newLine, newFixation, currentLine, offset);
 
                 updateOffset( newFixation, currentLine );
 
@@ -124,13 +124,13 @@
                 maxMarginY: 1.3,
                 slope: settings.slope
             }, geomModel);
-            linePredictor.init(geomModel);
+            linePredictor.init( geomModel );
         }
     }
 
     function classifySaccadeZone(currentFixation) {
         
-        var newLine = newLineDetector.search( currentFixation, offset );
+        var newLine = newLineDetector.search( currentFixation );
 
         var guessedZone;
         if (newLine) {
@@ -143,7 +143,7 @@
 
         logger.log( 'zone', guessedZone );
         currentFixation.saccade.zone = guessedZone;
-        updateScores(guessedZone);
+        updateScores( guessedZone );
 
         return newLine;
     }
@@ -195,24 +195,27 @@
     }
 
     function updateOffset( fixation, line ) {
-        if (isReadingMode) {
-            //offset = (line.bottom + line.top) / 2 - fixation.y;
+        if (isReadingMode && line) {
+            offset = line.center.y - fixation.y;
             logger.log('offset', offset);
         }
     }
 
     function map(fixation, line) {
 
+        logger.log('[MAP]');
         if (!isReadingMode) {
-            logger.log('map: none');
+            logger.log('    none');
             return null;
         }
 
         if (!line) {
-            logger.log(logger.Type.error, 'map: ???');
+            logger.log(logger.Type.error, '    ???');
             return null;
         }
 
+        line.addFixation( fixation );
+        
         var x = fixation.x;
         var result = null;
         var minDist = Number.MAX_VALUE;
@@ -232,11 +235,12 @@
             }
         }
 
-        logger.log('map: [d=', minDist, ']', result ? result.line.index + ',' + result.index : '' );
+        logger.log('    [d=', minDist, ']', result ? result.line.index + ',' + result.index : '' );
         return result;
     }
 
     function backtrackFixations( currentFixation, line ) {
+        logger.log( 'backtrack:' );
         var fixation = currentFixation.previous;
         while (fixation && !fixation.saccade.newLine) {
             if (fixation.saccade.zone === zone.nonreading) {

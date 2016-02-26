@@ -16,15 +16,16 @@
             logger = root.GazeTargets.Logger;
         },
 
-        search: function (currentFixation, offset) {
+        search: function (currentFixation) {
 
             if (!isInZone(currentFixation.saccade)) {
                 return null;
             }
 
             logger.log('new line? compare against the current line');
-            var result = compareAgainstCurrentLine( currentFixation, offset );
+            var result = compareAgainstCurrentLine( currentFixation );
             logger.log('    line: ', result ? result.index : '-');
+
             return result;
         },
 
@@ -50,7 +51,7 @@
                top < saccade.y && saccade.y < bottom;
     }
 
-    function compareAgainstCurrentLine(currentFixation, offset) {
+    function compareAgainstCurrentLine(currentFixation) {
         
         var firstLineFixation = getFirstFixationOnItsLine( currentFixation );
 
@@ -59,7 +60,7 @@
             return null;
         }
 
-        var verticalJump = currentFixation.y + offset - firstLineFixation.y;
+        var verticalJump = currentFixation.y - firstLineFixation.y;
         if ( minMarginY < verticalJump) {
             logger.log('    is below the current', verticalJump);
             return firstLineFixation.word.line.next;

@@ -1,4 +1,6 @@
 // Reading model: text geometry model creator
+// Depends on:
+//      libs/regression
 
 (function (root) {
 
@@ -110,6 +112,10 @@
         this.top = word.top;
         this.right = word.right;
         this.bottom = word.bottom;
+        this.center = {
+            x: (word.left + word.right) / 2,
+            y: (word.top + word.bottom) / 2
+        };
 
         this.words = [];
         this.words.push(new Word(word, dom, this));
@@ -120,6 +126,9 @@
         if (this.previous) {
             this.previous.next = this;
         }
+        
+        this.fixations = [];
+        this.fitEq = null;
     }
 
     Line.prototype.add = function (word, dom) {
@@ -130,6 +139,27 @@
         }
 
         this.words.push(new Word(word, dom, this));
+    };
+
+    Line.prototype.addFixation = function (fixation) {
+
+        this.fixations.push( [fixation.x, fixation.y] );
+
+        if (this.fixations.length > 1) {
+            var model = window.regression.model( 'linear', this.fixations, 2 );
+            this.fitEq = model.equation;
+            logger.log( 'model update for line', this.index, ':', model.string );
+        }
+    };
+
+    // returns difference between model x and the actual x
+    Line.prototype.fit = function (x, y) {
+        if (this.fitEq) {
+            var result = y - window.regression.fit( this.fitEq, x );
+            logger.log( 'fitting', x, 'to line', this.index, ': error is ', result );
+            return Math.abs( result );
+        }
+        return Number.MAX_VALUE;
     };
 
     // Word object

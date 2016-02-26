@@ -23,7 +23,7 @@ if (window.QUnit) {
         return Math.random() * (max - min) + min;
     }
     
-    var createProperLayot = function(layout) {
+    function createProperLayot(layout) {
         var line = null;
         var lineIndex = 0;
         var words = layout.map( function(word) {
@@ -41,6 +41,22 @@ if (window.QUnit) {
             return line.words[line.words.length - 1];
         });
         return words;
+    }
+
+    function createProperFixations(fixations) {
+        var lastFix = new Fixation(-10000, -10000, 250);
+        lastFix.saccade = new Saccade(0, 0);
+        var newFixations = fixations.map( function (fix, data, index) {
+            var result = new Fixation(
+                fix.x + randomInRange(-10, 10),
+                fix.y + randomInRange(-10, 10) + randomInRange(0.05, 0.05)  * fix.x,
+                250);
+            result.previous = index > 0 ? data[index - 1] : null;
+            result.saccade = new Saccade(result.x - lastFix.x, result.y - lastFix.y);
+            lastFix = result;
+            return result;
+        });
+        return newFixations;
     }
 
     var layout = [
@@ -483,16 +499,16 @@ if (window.QUnit) {
         { x: 664, y: -24, d: 433 },
         { x: -62, y: -181, d: 400 },
 //        { x: 671, y: 188, d: 133 },
-        { x: 734, y: 1, d: 367 },
+        { x: 734, y: -21, d: 367 },
         { x: 800, y: -29, d: 433 },
-        { x: 107, y: 8, d: 566 },
+        { x: 107, y: 38, d: 566 },
         { x: 175, y: 56, d: 500 },
         { x: 295, y: 36, d: 533 },
         { x: 357, y: 65, d: 666 },
         { x: 461, y: 59, d: 766 },
         { x: -62, y: -238, d: 100 },
 //        { x: 483, y: 267, d: 267 },
-        { x: 562, y: 19, d: 533 },
+        { x: 562, y: 9, d: 533 },
         { x: -62, y: -206, d: 381 },
 //        { x: 581, y: 253, d: 100 },
         { x: 661, y: 12, d: 634 },
@@ -506,7 +522,7 @@ if (window.QUnit) {
         { x: 511, y: 31, d: 519 },
         { x: 616, y: 20, d: 267 },
         { x: 688, y: 1, d: 467 },
-        { x: 794, y: -7, d: 800 },
+        { x: 794, y: 17, d: 800 },
         { x: 94, y: 53, d: 467 },
         { x: 170, y: 18, d: 300 },
         { x: 236, y: 31, d: 718 },
@@ -634,6 +650,47 @@ if (window.QUnit) {
         { x: 803, y: -33, d: 533 },
         { x: 237, y: -6, d: 133 },
     ];
+
+    QUnit.module( 'Regression module', {
+        beforeEach: function() {
+            console.log('################### Regression ##################');
+        },
+        afterEach: function() {
+        }
+    });
+
+    QUnit.test( 'Regression', function( assert ) {
+        var data = [
+            [-10, -738],
+            [-9, -520],
+            [-8, -350],
+            [-7, -222],
+            [-6, -130],
+            [-5, -68],
+            [-4, -30],
+            [-3, -10],
+            [-2, -2],
+            [-1, 0],
+            [0, 2],
+            [1, 10],
+            [2, 30],
+            [3, 68],
+            [4, 130],
+            [5, 222],
+            [6, 350],
+            [7, 520],
+            [8, 738],
+            [9, 1010],
+            [10, 1342]
+        ];
+        
+        var model = window.regression.model('polynomial', data, 3);
+        console.log(model.string);
+
+        var y = window.regression.fit(model.equation, -6);  
+
+        assert.ok( y === model.points[4][1], 'regression' );
+    });
 
     QUnit.module( 'Logger module', {
         beforeEach: function() {
@@ -899,7 +956,7 @@ if (window.QUnit) {
                 this.linePredictor.init( geomModel );
                 console.log('################### LinePredictor ##################');
 
-                return this.linePredictor.get( switched, newLine, fixation, 0 );
+                return this.linePredictor.get( switched, newLine, fixation, null, 0 );
             };
         },
         afterEach: function() {
@@ -911,25 +968,14 @@ if (window.QUnit) {
         var geomModel = this.geometry.create( layout );
         Fixations.init();
 
-        var lastFix = new Fixation(-10000, -10000, 250);
-        var fixations = simulated.map( function (fix, data, index) {
-            var result = new Fixation(
-                fix.x + randomInRange(-10, 10),
-                fix.y + randomInRange(-10, 10) + randomInRange(0.05, 0.05)  * fix.x,
-                250);
-            result.previous = index > 0 ? data[index - 1] : null;
-            result.saccade = new Saccade(result.x - lastFix.x, result.y - lastFix.y);
-            lastFix = result;
-            return result;
-        });
+        var fixations = createProperFixations( simulated );
+        var result;
 
         // test 1
         var fixIndex = 5;
         var fixOnReadingStart = fixations[ fixIndex ];
-        assert.equal( this.run( geomModel, {
-            toReading: true, 
-            toNonReading: false
-        }, null, fixOnReadingStart), geomModel.lines[0], 'reading starts' );
+        result = this.run( geomModel, { toReading: true, toNonReading: false}, null, fixOnReadingStart);
+        assert.equal( result.index, geomModel.lines[0].index, 'reading starts' );
 
         var fix = fixations[ fixIndex ];
         while (fix) {
@@ -941,10 +987,8 @@ if (window.QUnit) {
         // test 2
         fixIndex = 6;
         var fixNext = fixations[ fixIndex ];
-        assert.equal( this.run( geomModel, {
-            toReading: false, 
-            toNonReading: false
-        }, null, fixNext), geomModel.lines[0], 'reading continues' );
+        result = this.run( geomModel, { toReading: false,  toNonReading: false }, null, fixNext);
+        assert.equal( result.index, geomModel.lines[0].index, 'reading continues' );
 
         fixNext.word = geomModel.lines[0].words[ fixIndex ];
         fix = fixations[ 17 ];
@@ -957,28 +1001,22 @@ if (window.QUnit) {
         // test 3
         fixIndex = 18;
         var fixFirstOnSecondLine = fixations[ fixIndex ];
-        assert.equal( this.run( geomModel, {
-            toReading: false, 
-            toNonReading: true
-        }, geomModel.lines[1], fixFirstOnSecondLine), geomModel.lines[1], 'reading next line' );
+        result = this.run( geomModel, { toReading: false, toNonReading: true }, geomModel.lines[1], fixFirstOnSecondLine);
+        assert.equal( result.index, geomModel.lines[1].index, 'reading next line' );
 
         fixFirstOnSecondLine.word = geomModel.lines[1].words[ 0 ];
 
         // test 4
         fixIndex = 19;
         var fixSecondOnSecondLine = fixations[ fixIndex ];
-        assert.equal( this.run( geomModel, {
-            toReading: false, 
-            toNonReading: true
-        }, null, fixSecondOnSecondLine), null, 'reading ends' );
+        result = this.run( geomModel, { toReading: false, toNonReading: true }, null, fixSecondOnSecondLine);
+        assert.equal( result, null, 'reading ends' );
 
         // test 5
         fixIndex = 23;
         var fixSecondReadingStart = fixations[ fixIndex ];
-        assert.equal( this.run( geomModel, {
-            toReading: true, 
-            toNonReading: false
-        }, null, fixSecondReadingStart), geomModel.lines[1], 'reading starts agains' );
+        result = this.run( geomModel, { toReading: true,  toNonReading: false }, null, fixSecondReadingStart)
+        assert.equal( result.index, geomModel.lines[1].index, 'reading starts agains' );
     });
 
     QUnit.module( 'Campbell module', {
@@ -1033,6 +1071,7 @@ if (window.QUnit) {
 
     QUnit.test( 'Campbell', function( assert ) {
         
+        // test 1
         var mapped = 0;
         var notMapped = 0;
         this.run( layout, simulated, null, 'simulated', function (word) {
@@ -1044,6 +1083,7 @@ if (window.QUnit) {
         });
         assert.ok( mapped === 21 && notMapped === 4, 'simulated data' );
         
+        // test 2
         mapped = 0;
         notMapped = 0;
         this.run( layout, simulated, function (fix) { return { x: fix.x, y: fix.y }; }, 'mouse', function (word) {
@@ -1057,9 +1097,9 @@ if (window.QUnit) {
 
         var words = layout2;
 
-        //this.logger.level( this.logger.Level.debug );
+this.logger.level( this.logger.Level.debug );
 
-        // Progressive reading
+        // test 3: Progressive reading
         var lines = [];
         var noLine = 0;
         for (var i = 0; i < 11; i++) { lines.push(0); }
@@ -1074,8 +1114,9 @@ if (window.QUnit) {
         lines.forEach( function(item, index) { console.log(index, item); } );
         console.log('none', noLine);
         assert.ok( lines[0] === 5 && lines[1] === 9 && lines[2] === 9 && lines[3] === 9 && noLine === 5, 'real: progressive' );
+this.logger.level( this.logger.Level.silent );
 
-        // Regressive reading
+        // test 4: Regressive reading
         lines = [];
         noLine = 0;
         for (var i = 0; i < 11; i++) { lines.push(0); }
@@ -1089,9 +1130,9 @@ if (window.QUnit) {
         });
         assert.ok( lines[0] === 22 && noLine === 7, 'real: regressive' );
         
-        this.logger.level( this.logger.Level.debug );
+        //this.logger.level( this.logger.Level.debug );
 
-        // line up
+        // test 5: line up
         lines = [];
         noLine = 0;
         for (var i = 0; i < 11; i++) { lines.push(0); }
@@ -1107,7 +1148,7 @@ if (window.QUnit) {
         console.log('none', noLine);
         assert.ok( lines[0] === 22 && noLine === 4, 'real: lineup' );
         
-        assert.ok( this.run( words, fix_linedown, null, 'ld' ), 'real: linedown' );
+        //assert.ok( this.run( words, fix_linedown, null, 'ld' ), 'real: linedown' );
 
         this.logger.level( this.logger.Level.silent );
     });
