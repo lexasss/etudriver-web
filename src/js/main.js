@@ -747,12 +747,15 @@
         }
 
         // Find the focused target
-        var useFix = settings.mapping.source == GazeTargets.mapping.sources.fixations && fixdet.currentFix;
-        var mappingX = useFix ? fixdet.currentFix.x : point.x,
-            mappingY = useFix ? fixdet.currentFix.y : point.y,
-            fixationDuration = useFix ? fixdet.currentFix.duration : 0;
+        var mappingResult;
+        var fixation = settings.mapping.source == GazeTargets.mapping.sources.fixations ? fixdet.currentFix : null;
+        if (fixation) {
+            mappingResult = mapper.feed(mappingX, mappingY, fixationDuration);
+        }
+        else {
+            mappingResult = mapper.feed(point.x, point.y);
+        }
         
-        var mappingResult = mapper.feed(mappingX, mappingY, fixationDuration);
         if (progress && mappingResult.isNewFocused) {
             progress.moveTo(mappingResult.focused);
         }

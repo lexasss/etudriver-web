@@ -143,12 +143,35 @@
 
     Line.prototype.addFixation = function (fixation) {
 
-        this.fixations.push( [fixation.x, fixation.y] );
+        this.fixations.push( [fixation.x, fixation.y, fixation.saccade] );
 
         if (this.fixations.length > 1) {
-            var model = window.regression.model( 'linear', this.fixations, 2 );
+            this.removeOldFixation();
+            var type = this.fixations.length < 5 ? 'linear' : 'polynomial';
+            var model = window.regression.model( type, this.fixations, 2 );
             this.fitEq = model.equation;
             logger.log( 'model update for line', this.index, ':', model.string );
+        }
+    };
+
+    Line.prototype.removeOldFixation = function () {
+        var lastIndex = this.fixations.length - 1;
+        if (lastIndex < 5) {
+            return;
+        }
+
+        var index = lastIndex;
+        var fix;
+        while (index > 0) {
+            fix = this.fixations[ index ];
+            if (index > 0 && fix[2].newLine) {       // the current line started here
+                if (lastIndex - index + 1 > 3) {     // lets have at least 4 fixations
+                    this.fixations = this.fixations.slice( index );
+                    logger.log( '    line fixations: reduced' );
+                }
+                break;
+            }
+            index -= 1;
         }
     };
 

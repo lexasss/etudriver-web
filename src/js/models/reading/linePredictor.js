@@ -15,7 +15,7 @@
             logger = root.GazeTargets.Logger;
         },
 
-        get: function(switched, newLine, currentFixation, currentLine, offset) {
+        get: function(state, newLine, currentFixation, currentLine, offset) {
             var result = null;
             logger.log('[LP]');
 
@@ -23,13 +23,16 @@
                 result = newLine;
                 logger.log('    current line is #', newLine.index);
             }
-            else if (switched.toReading) {
+            else if (state.isReadingMode && state.isSwitched) {
                 result = guessCurrentLine( currentFixation.x, currentFixation.y, currentLine );
             }
-            else if (switched.toNonReading) {
-                logger.log('    current line reset');
-                return null;
+            else if (!state.isReadingMode) {
+                result = getClosestLine( currentFixation, offset );
             }
+            // else if (switched.toNonReading) {
+            //     logger.log('    current line reset');
+            //     return null;
+            // }
             else if (currentFixation.previous && currentFixation.previous.saccade.newLine) {
                     //currentFixation.previous.word && 
                     // currentFixation.previous.word.line.fixations.length < 3) {
@@ -41,6 +44,10 @@
 
             if (!result) {
                 result = getClosestLine( currentFixation, offset );
+            }
+
+            if (result && (!currentLine || result.index !== currentLine.index)) {
+                currentFixation.saccade.newLine = true;
             }
 
             return result;
@@ -70,8 +77,17 @@
         for (var i = 0; i < lines.length; ++i) {
             var line = lines[i];
             var diff = line.fit( x, y );
-            if (currentLineIndex === line.index) {
-                diff /= currentLinePrefRate;
+            if (currentLineIndex === line.index) {          // current line has priority:
+                if (diff < geomModel.lineSpacing / 2) {     // it must be followed in case the current fixation follows it
+                    result = line;
+                    minDiff = diff;
+                    logger.log('        following the current line');
+                    break;
+                }
+                else {                                  // and also otherwise
+                    diff /= currentLinePrefRate;
+                    logger.log('        preffering the current line, diff=', diff);
+                }
             }
             if (diff < minDiff) {
                 minDiff = diff;

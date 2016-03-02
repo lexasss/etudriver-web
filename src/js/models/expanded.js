@@ -15,10 +15,21 @@
             settings = _settings;
         },
 
-        feed: function (targets, x, y, fixationDuration) {
+        feed: function (targets, data1, data2) {
 
             var mapped = null;
             var minDist = Number.MAX_VALUE;
+            var x, y;
+
+            if (data2) {
+                x = data1;
+                y = data2;
+            }
+            else {
+                var fix = data1;
+                x = fix.x;
+                y = fix.y;
+            }
 
             for (var i = 0; i < targets.length; i += 1) {
                 var target = targets[i];

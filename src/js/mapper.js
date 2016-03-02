@@ -28,7 +28,10 @@
             targets = _targets;
         },
 
-        feed: function (x, y, fixationDuration) {
+        // Arguments: 
+        //  if both data1 and data2 are defined: this is x and y of a sample
+        //  if daat2 is undefined: daat1 is a fixation
+        feed: function (data1, data2) {
 
             var mapped = null;
 
@@ -42,7 +45,7 @@
                     activeTargets.push(target);
                 }
 
-                mapped = model.feed(activeTargets, x, y, fixationDuration);
+                mapped = model.feed(activeTargets, data1, data2);
             }
 
             var isNewFocused = false;

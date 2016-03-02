@@ -36,20 +36,25 @@
             logger = root.GazeTargets.Logger;
         },
 
-        feed: function (targets, x, y, fixationDuration) {
+        feed: function (targets, data1, data2) {
 
             createGeometry(targets);
 
             var mapped = lastMapped;
 
-            var newFixation = fixations.feed(x, y, fixationDuration);
+            var newFixation = fixations.feed(data1, data2);
             if (newFixation) {
 
                 logger.log( newFixation.toString() );
+
                 var newLine = classifySaccadeZone( newFixation );
 
                 var switched = updateMode();
-                currentLine = linePredictor.get( switched, newLine, newFixation, currentLine, offset);
+                var state = {
+                    isReadingMode: isReadingMode,
+                    isSwitched: switched.toReading || switched.toNonReading
+                };
+                currentLine = linePredictor.get( state, newLine, newFixation, currentLine, offset);
 
                 updateOffset( newFixation, currentLine );
 
@@ -204,17 +209,19 @@
     function map(fixation, line) {
 
         logger.log('[MAP]');
-        if (!isReadingMode) {
-            logger.log('    none');
-            return null;
-        }
+        // if (!isReadingMode) {
+        //     logger.log('    none');
+        //     return null;
+        // }
 
         if (!line) {
-            logger.log(logger.Type.error, '    ???');
+            //logger.log(logger.Type.error, '    ???');
             return null;
         }
 
-        line.addFixation( fixation );
+        if (isReadingMode) {
+            line.addFixation( fixation );
+        }
         
         var x = fixation.x;
         var result = null;

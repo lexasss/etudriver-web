@@ -503,46 +503,46 @@ if (window.QUnit) {
         { x: 800, y: -29, d: 433 },
         { x: 107, y: 38, d: 566 },
         { x: 175, y: 56, d: 500 },
-        { x: 295, y: 36, d: 533 },
+        { x: 295, y: 76, d: 533 },
         { x: 357, y: 65, d: 666 },
         { x: 461, y: 59, d: 766 },
         { x: -62, y: -238, d: 100 },
 //        { x: 483, y: 267, d: 267 },
-        { x: 562, y: 9, d: 533 },
+        { x: 562, y: 49, d: 533 },
         { x: -62, y: -206, d: 381 },
 //        { x: 581, y: 253, d: 100 },
-        { x: 661, y: 12, d: 634 },
-        { x: 691, y: 48, d: 252 },
-        { x: 791, y: 25, d: 667 },
-        { x: 63, y: 35, d: 500 },
-        { x: 146, y: 45, d: 800 },
-        { x: 270, y: 20, d: 200 },
-        { x: 337, y: 37, d: 633 },
-        { x: 449, y: 13, d: 334 },
-        { x: 511, y: 31, d: 519 },
-        { x: 616, y: 20, d: 267 },
-        { x: 688, y: 1, d: 467 },
-        { x: 794, y: 17, d: 800 },
-        { x: 94, y: 53, d: 467 },
-        { x: 170, y: 18, d: 300 },
-        { x: 236, y: 31, d: 718 },
-        { x: 331, y: 7, d: 266 },
-        { x: 393, y: 13, d: 666 },
-        { x: 464, y: 33, d: 635 },
+        { x: 661, y: 62, d: 634 },
+        { x: 691, y: 78, d: 252 },
+        { x: 791, y: 95, d: 667 },
+        { x: 63, y: 135, d: 500 },
+        { x: 146, y: 145, d: 800 },
+        { x: 270, y: 120, d: 200 },
+        { x: 337, y: 137, d: 633 },
+        { x: 449, y: 113, d: 334 },
+        { x: 511, y: 131, d: 519 },
+        { x: 616, y: 120, d: 267 },
+        { x: 688, y: 101, d: 467 },
+        { x: 794, y: 117, d: 800 },
+        { x: 94, y: 203, d: 467 },
+        { x: 170, y: 218, d: 300 },
+        { x: 236, y: 231, d: 718 },
+        { x: 331, y: 207, d: 266 },
+        { x: 393, y: 213, d: 666 },
+        { x: 464, y: 233, d: 635 },
         { x: -62, y: -312, d: 100 },
 //        { x: 532, y: 342, d: 133 },
-        { x: 612, y: 8, d: 401 },
+        { x: 612, y: 208, d: 401 },
         { x: -62, y: -308, d: 233 },
 //        { x: 628, y: 338, d: 401 },
-        { x: 695, y: 10, d: 501 },
-        { x: 802, y: 14, d: 67 },
+        { x: 695, y: 210, d: 501 },
+        { x: 802, y: 214, d: 167 },
         { x: -62, y: -306, d: 305 },
 //        { x: 802, y: 334, d: 433 },
     ];
 
     var fix_regressive = [
         { x: -62, y: -99, d: 634 },
-        { x: 139, y: 217, d: 132 },
+        //{ x: 139, y: 217, d: 132 },
         { x: 96, y: -14, d: 301 },
         { x: 130, y: 69, d: 466 },
         { x: 207, y: 18, d: 466 },
@@ -580,13 +580,20 @@ if (window.QUnit) {
 
     var fix_lineup = [
         { x: -62, y: -99, d: 500 },
+        { x: 164, y: 19, d: 467 },
+        { x: 252, y: 25, d: 300 },
+        { x: 319, y: 0, d: 534 },
+        { x: 440, y: 9, d: 733 },
+        { x: 540, y: 40, d: 733 },
+        { x: 646, y: 11, d: 233 },
+        { x: 736, y: 10, d: 1001 },
         { x: 170, y: 94, d: 833 },
         { x: 238, y: 75, d: 400 },
         { x: -62, y: -227, d: 300 },
         //{ x: 322, y: 237, d: 400 },
         { x: -62, y: -209, d: 267 },
         //{ x: 327, y: 224, d: 52 },
-        { x: 376, y: -16, d: 267 },
+        { x: 376, y: 86, d: 267 },
         { x: 459, y: 97, d: 500 },
         { x: -62, y: -125, d: 66 },
         { x: 524, y: 78, d: 200 },
@@ -595,60 +602,42 @@ if (window.QUnit) {
         { x: 812, y: 2, d: 434 },
         { x: -62, y: -138, d: 99 },
         //{ x: 75, y: 224, d: 257 },
-        { x: 164, y: 19, d: 467 },
-        { x: 252, y: 25, d: 300 },
-        { x: 319, y: 0, d: 534 },
-        { x: 440, y: 9, d: 733 },
-        { x: 540, y: 40, d: 733 },
-        { x: 646, y: 11, d: 233 },
-        { x: 736, y: 10, d: 1001 },
         { x: 227, y: 14, d: 533 },
-        { x: 222, y: 59, d: 100 },
-        { x: 239, y: 86, d: 233 },
-        { x: 265, y: 65, d: 162 },
-        { x: 291, y: 96, d: 68 },
+        { x: 222, y: 9, d: 100 },
+        { x: 239, y: 16, d: 233 },
+        { x: 265, y: -5, d: 162 },
+        { x: 291, y: 6, d: 68 },
         { x: 380, y: 17, d: 700 },
         { x: 448, y: -5, d: 136 },
-        { x: 447, y: -41, d: 65 },
-        { x: 465, y: -65, d: 68 },
-        { x: 530, y: -47, d: 300 },
-        { x: 632, y: -1, d: 534 },
-        { x: 764, y: -19, d: 633 },
     ];
 
     var fix_linedown = [
-        { x: -62, y: -99, d: 552 },
-        { x: -62, y: 14, d: 67 },
-        { x: 320, y: 177, d: 34 },
-        { x: 133, y: 84, d: 66 },
-        { x: -62, y: -219, d: 167 },
-        { x: 129, y: 256, d: 200 },
+        { x: 237, y: -6, d: 133 },
+        { x: 595, y: 43, d: 367 },
+        { x: 586, y: 33, d: 567 },
+        { x: 658, y: 20, d: 500 },
+        { x: 749, y: 2, d: 300 },
+        { x: 803, y: -33, d: 533 },
         { x: -62, y: -228, d: 167 },
         { x: -62, y: 14, d: 167 },
         { x: 234, y: 275, d: 300 },
         { x: -62, y: -247, d: 34 },
         { x: 260, y: 274, d: 267 },
-        { x: 321, y: -4, d: 233 },
+        //{ x: 321, y: -4, d: 233 },
         { x: -62, y: -228, d: 134 },
         { x: 329, y: 254, d: 100 },
         { x: -62, y: -226, d: 200 },
         { x: -62, y: 14, d: 1033 },
         { x: 452, y: 248, d: 167 },
-        { x: 594, y: 1, d: 153 },
+        //{ x: 594, y: 1, d: 153 },
         { x: -62, y: -207, d: 233 },
-        { x: 602, y: 231, d: 134 },
-        { x: 704, y: 6, d: 433 },
+        { x: 602, y: 238, d: 134 },
+        //{ x: 704, y: 6, d: 433 },
         { x: -62, y: -195, d: 415 },
         { x: 710, y: 218, d: 267 },
         { x: -62, y: -190, d: 167 },
         { x: -62, y: 14, d: 34 },
         { x: 725, y: 204, d: 67 },
-        { x: 595, y: -43, d: 367 },
-        { x: 586, y: 33, d: 567 },
-        { x: 658, y: 20, d: 500 },
-        { x: 749, y: 2, d: 300 },
-        { x: 803, y: -33, d: 533 },
-        { x: 237, y: -6, d: 133 },
     ];
 
     QUnit.module( 'Regression module', {
@@ -713,6 +702,7 @@ if (window.QUnit) {
 
     QUnit.module( 'Fixations module', {
         beforeEach: function() {
+            this.logger = window.GazeTargets.Logger;
             this.fixations = window.GazeTargets.Models.Reading.Fixations;
             this.fixations.init();
             this.run = function (data) {
@@ -725,10 +715,20 @@ if (window.QUnit) {
                 for (var i = 0; i < data.length; i++) {
                     
                     var point = data[i];
+                    var fix = {
+                        x: point.x,
+                        y: point.y,
+                        duration: 0,
+                        saccade: {
+                            dx: 12,
+                            dy: 15
+                        }
+                    }
 
-                    for (j = 0; j < 2; ++j) {
-                        var fixation = this.fixations.feed(point.x, point.y, 250 * j);
-                        result = result && (j === 0 ? !!fixation : !fixation);
+                    for (j = 1; j <= 8; ++j) {
+                        fix.duration = 33 * j;
+                        var fixation = this.fixations.feed( fix );
+                        result = result && (j === 3 ? !!fixation : !fixation);
                     }
                 }
 
@@ -740,8 +740,12 @@ if (window.QUnit) {
     });
 
     QUnit.test( 'Fixations', function( assert ) {
+        this.logger.level( this.logger.Level.debug );
+        
         assert.ok( this.run( simulated ), 'test 1' );
         assert.ok( this.run( mouse ), 'test 2' );
+
+        this.logger.level( this.logger.Level.silent );
     });
 
     QUnit.module( 'Geometry module', {
@@ -1010,7 +1014,7 @@ if (window.QUnit) {
         fixIndex = 19;
         var fixSecondOnSecondLine = fixations[ fixIndex ];
         result = this.run( geomModel, { toReading: false, toNonReading: true }, null, fixSecondOnSecondLine);
-        assert.equal( result, null, 'reading ends' );
+        assert.equal( result.index, geomModel.lines[1].index, 'reading ends' );
 
         // test 5
         fixIndex = 23;
@@ -1053,8 +1057,9 @@ if (window.QUnit) {
                         fixation = converter(fixation);
                     }
 
-                    for (j = 0; j < 2; ++j) {
-                        this.campbell.feed(layout, fixation.x, fixation.y, 250 * j);
+                    for (j = 1; j <= 8; ++j) {
+                        fixation.duration = 33 * j;
+                        this.campbell.feed(layout, fixation);
                     }
 
                     var mappedWord = this.campbell.currentWord();
@@ -1081,7 +1086,7 @@ if (window.QUnit) {
                 notMapped++;
             }
         });
-        assert.ok( mapped === 21 && notMapped === 4, 'simulated data' );
+        assert.ok( mapped === 25 && notMapped === 0, 'simulated data' );
         
         // test 2
         mapped = 0;
@@ -1093,11 +1098,9 @@ if (window.QUnit) {
                 notMapped++;
             }
         });
-        assert.ok( mapped === 21 && notMapped === 4, 'mouse-collected data' );
+        assert.ok( mapped === 25 && notMapped === 0, 'mouse-collected data' );
 
         var words = layout2;
-
-this.logger.level( this.logger.Level.debug );
 
         // test 3: Progressive reading
         var lines = [];
@@ -1113,8 +1116,7 @@ this.logger.level( this.logger.Level.debug );
         });
         lines.forEach( function(item, index) { console.log(index, item); } );
         console.log('none', noLine);
-        assert.ok( lines[0] === 5 && lines[1] === 9 && lines[2] === 9 && lines[3] === 9 && noLine === 5, 'real: progressive' );
-this.logger.level( this.logger.Level.silent );
+        assert.ok( lines[0] === 10 && lines[1] === 9 && lines[2] === 9 && lines[3] === 9 && noLine === 0, 'real: progressive' );
 
         // test 4: Regressive reading
         lines = [];
@@ -1128,15 +1130,15 @@ this.logger.level( this.logger.Level.silent );
                 noLine++;
             }
         });
-        assert.ok( lines[0] === 22 && noLine === 7, 'real: regressive' );
+        lines.forEach( function(item, index) { console.log(index, item); } );
+        console.log('none', noLine);
+        assert.ok( lines[0] === 28 && noLine === 0, 'real: regressive' );
         
-        //this.logger.level( this.logger.Level.debug );
-
         // test 5: line up
         lines = [];
         noLine = 0;
         for (var i = 0; i < 11; i++) { lines.push(0); }
-        this.run( words, fix_lineup, null, 'lienup', function (word) {
+        this.run( words, fix_lineup, null, 'lineup', function (word) {
             var line = word ? word.line : null;
             if (line) {
                 lines[line.index]++;
@@ -1146,10 +1148,22 @@ this.logger.level( this.logger.Level.silent );
         });
         lines.forEach( function(item, index) { console.log(index, item); } );
         console.log('none', noLine);
-        assert.ok( lines[0] === 22 && noLine === 4, 'real: lineup' );
+        assert.ok( lines[0] === 14 && lines[1] === 8 && noLine === 0, 'real: lineup' );
         
-        //assert.ok( this.run( words, fix_linedown, null, 'ld' ), 'real: linedown' );
-
-        this.logger.level( this.logger.Level.silent );
+        // test 5: line down
+        lines = [];
+        noLine = 0;
+        for (var i = 0; i < 11; i++) { lines.push(0); }
+        this.run( words, fix_linedown, null, 'linedown', function (word) {
+            var line = word ? word.line : null;
+            if (line) {
+                lines[line.index]++;
+            } else {
+                noLine++;
+            }
+        });
+        lines.forEach( function(item, index) { console.log(index, item); } );
+        console.log('none', noLine);
+        assert.ok( lines[0] === 6 && lines[6] === 7 && noLine === 0, 'real: linedown' );
     });
 }
