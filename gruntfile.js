@@ -1,6 +1,7 @@
 module.exports = function(grunt) {
 
     var srcDir = 'src/';
+    var libDir = 'libs/';
     var buildDir = 'build/';
     var buildName = buildDir + '<%= pkg.name %>';
 
@@ -10,7 +11,7 @@ module.exports = function(grunt) {
         
         concat: {
             js: {
-                src: srcDir + 'js/**/*.js',
+                src: [srcDir + 'js/**/*.js', libDir + '**/*.js'],
                 dest: buildName + '.js'
             },
             css: {

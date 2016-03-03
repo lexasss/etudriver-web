@@ -95,8 +95,23 @@
             }
         }
 
-        result = minDiff < guessMaxDist ? result : null;
-        logger.log('    guessed line from prev fixations', result ? result.index : '---');
+        //result = minDiff < guessMaxDist ? result : null;
+        if (Math.abs( minDiff ) < 0.7 * geomModel.lineSpacing ) {
+            logger.log('    guessed line from prev fixations', result ? result.index : '---');
+        }
+        else if (currentLine) {
+            var lineIndex = currentLineIndex + Math.round( minDiff / geomModel.lineSpacing );
+            if (0 <= lineIndex && lineIndex < lines.length) {
+                result = lines[ lineIndex ];
+                logger.log('    guessed jump to line #', result.index);
+            }
+            else {
+                result = null;
+            }
+        }
+        else {
+            result = null;
+        }
 
         return result;
     }

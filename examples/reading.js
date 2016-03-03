@@ -36,7 +36,7 @@ var Reading = Reading || {};
                 }
             ],
             mapping: {
-                type: GazeTargets.mapping.types.reading,  
+                type: GazeTargets.mapping.types.reading,
                 source: GazeTargets.mapping.sources.fixations,
                 readingModel: GazeTargets.mapping.readingModel.campbell,
                 reading: {
@@ -74,6 +74,8 @@ var Reading = Reading || {};
                 }
             }
         });
+
+        GazeTargets.Logger.level( GazeTargets.Logger.Level.debug );
     }
 
     app.GazeTargetsManager = GazeTargetsManager;

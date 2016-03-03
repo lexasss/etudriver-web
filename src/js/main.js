@@ -750,7 +750,7 @@
         var mappingResult;
         var fixation = settings.mapping.source == GazeTargets.mapping.sources.fixations ? fixdet.currentFix : null;
         if (fixation) {
-            mappingResult = mapper.feed(mappingX, mappingY, fixationDuration);
+            mappingResult = mapper.feed(fixation);
         }
         else {
             mappingResult = mapper.feed(point.x, point.y);
