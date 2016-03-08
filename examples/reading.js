@@ -75,7 +75,7 @@ var Reading = Reading || {};
             }
         });
 
-        GazeTargets.Logger.level( GazeTargets.Logger.Level.debug );
+        //GazeTargets.Logger.level( GazeTargets.Logger.Level.debug );
     }
 
     app.GazeTargetsManager = GazeTargetsManager;

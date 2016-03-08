@@ -4840,6 +4840,7 @@
             var newFixation = fixations.feed(data1, data2);
             if (newFixation) {
 
+				console.log('{ x: ' + Math.round(newFixation.x) + ', y: ' + Math.round(newFixation.y) + ', d: ' + Math.round(newFixation.duration) + '}');
                 logger.log( newFixation.toString() );
 
                 // new line searcfh disabled -->
