@@ -11,6 +11,7 @@
 
             guessMaxDist = 3 * geomModel.lineSpacing;
             currentLineMaxDist = 0.7 * geomModel.lineSpacing;
+            definiteFollowingThreshold = 0.5 * geomModel.lineSpacing;
 
             logger = root.GazeTargets.Logger;
         },
@@ -95,6 +96,7 @@
     var currentLinePrefRate = 1.3;
     var guessMaxDist;
     var currentLineMaxDist;
+    var definiteFollowingThreshold;
 
     // TODO: penalize all lines but the current one - the current lline should get priority
     function guessCurrentLine(x, y, currentLine, offset) {
@@ -108,7 +110,7 @@
             var line = lines[i];
             var diff = Math.abs( line.fit( x, y ) );
             if (currentLineIndex === line.index) {          // current line has priority:
-                if (diff < geomModel.lineSpacing / 2) {     // it must be followed in case the current fixation follows it
+                if (diff < definiteFollowingThreshold) {     // it must be followed in case the current fixation follows it
                     result = line;
                     minDiff = diff;
                     logger.push( 'following the current line' );
@@ -126,7 +128,7 @@
         }
 
         logger.push( 'diff =', Math.floor( minDiff ) );
-        if (minDiff < 0.7 * geomModel.lineSpacing ) {
+        if (minDiff < currentLineMaxDist ) {
             logger.push( 'most likely:', result ? result.index : '---' );
         }
         else if (currentLine) {     // maybe, this is a quick jump to some other line?
