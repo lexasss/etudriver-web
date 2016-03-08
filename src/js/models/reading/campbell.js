@@ -47,14 +47,21 @@
 
                 logger.log( newFixation.toString() );
 
-                var newLine = classifySaccadeZone( newFixation );
+                // new line searcfh disabled -->
+                //var newLine = classifySaccadeZone( newFixation );
+                var guessedZone = zone.match( newFixation.saccade );
+                logger.push( 'zone', guessedZone );
+                newFixation.saccade.zone = guessedZone;
+                updateScores( guessedZone );
+                // --> replacement
 
                 var switched = updateMode();
                 var state = {
-                    isReadingMode: isReadingMode,
+                    isReading: isReadingMode,
                     isSwitched: switched.toReading || switched.toNonReading
                 };
-                currentLine = linePredictor.get( state, newLine, newFixation, currentLine, offset);
+                currentLine = linePredictor.get( state, newFixation, currentLine, offset );
+                //currentLine = linePredictor.getAlways( state, newLine, newFixation, currentLine, offset );
 
                 updateOffset( newFixation, currentLine );
 
@@ -69,6 +76,8 @@
 
             lastMapped = mapped;
             select( lastMapped );
+
+            logger.closeBuffer();
 
             return mapped ? mapped.dom : null;
         },
@@ -133,39 +142,39 @@
         }
     }
 
-    function classifySaccadeZone(currentFixation) {
+    // function classifySaccadeZone(currentFixation) {
         
-        var newLine = newLineDetector.search( currentFixation );
+    //     var newLine = newLineDetector.search( currentFixation );
 
-        var guessedZone;
-        if (newLine) {
-            guessedZone = zone.reading;
-            currentFixation.saccade.newLine = true;
-        }
-        else {
-            guessedZone = zone.match( currentFixation.saccade );
-        }
+    //     var guessedZone;
+    //     if (newLine) {
+    //         guessedZone = zone.reading;
+    //         currentFixation.saccade.newLine = true;
+    //     }
+    //     else {
+    //         guessedZone = zone.match( currentFixation.saccade );
+    //     }
 
-        logger.log( 'zone', guessedZone );
-        currentFixation.saccade.zone = guessedZone;
-        updateScores( guessedZone );
+    //     logger.log( 'zone', guessedZone );
+    //     currentFixation.saccade.zone = guessedZone;
+    //     updateScores( guessedZone );
 
-        return newLine;
-    }
+    //     return newLine;
+    // }
 
     function updateScores(guessedZone) {
         switch (guessedZone) {
             case zone.reading:
-                logger.log('in reading zone');
+                logger.push('in reading zone');
                 scoreReading++;
                 scoreNonReading -= settings.forgettingFactor;
                 break;
             case zone.neutral:
-                logger.log('in neutral zone');
+                logger.push('in neutral zone');
                 //scoreNonReading++;
                 break;
             default:
-                logger.log('in nonreading zone');
+                logger.push('in nonreading zone');
                 scoreNonReading = settings.nonreadingThreshold;
                 scoreReading = 0;
         }
@@ -195,20 +204,21 @@
     }
 
     function changeMode(toReading) {
-        logger.log('change Mode', toReading);
+        logger.push('change Mode', toReading);
         isReadingMode = toReading;
     }
 
     function updateOffset( fixation, line ) {
         if (isReadingMode && line) {
             offset = line.center.y - fixation.y;
-            logger.log('offset', offset);
+            logger.push('offset', offset);
         }
     }
 
     function map(fixation, line) {
 
-        logger.log('[MAP]');
+        logger.closeBuffer();
+        logger.push('[MAP]');
         // if (!isReadingMode) {
         //     logger.log('    none');
         //     return null;
@@ -242,12 +252,12 @@
             }
         }
 
-        logger.log('    [d=', minDist, ']', result ? result.line.index + ',' + result.index : '' );
+        logger.push('    [d=', minDist, ']', result ? result.line.index + ',' + result.index : '' );
         return result;
     }
 
     function backtrackFixations( currentFixation, line ) {
-        logger.log( 'backtrack:' );
+        logger.log( '------ backtrack ------' );    
         var fixation = currentFixation.previous;
         while (fixation && !fixation.saccade.newLine) {
             if (fixation.saccade.zone === zone.nonreading) {
@@ -256,6 +266,7 @@
             fixation.word = map( fixation, line );
             fixation = fixation.previous;
         }
+        logger.log( '------ ///////// ------' );
     }
 
     function select(word) {

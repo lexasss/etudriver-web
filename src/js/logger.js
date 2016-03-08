@@ -7,6 +7,9 @@
     var Logger = {
 
         log: function (...args) {
+
+            this.closeBuffer();
+
             if (args.length > 1 && typeof args[0] === 'symbol') {
                 var type = args[0];
                 args = args.slice(1);
@@ -28,6 +31,37 @@
             }
 
             return false;
+        },
+
+        push: function (...args) {
+            if (args.length > 1 && typeof args[0] === 'symbol') {
+                var type = args[0];
+                args = args.slice(1);
+                
+                if (type === this.Type['error']) {
+                    buffer.push('ERROR: ' + args.join(' '));
+                    return true;
+                }
+                
+                if (type === this.Type['info']) {
+                    buffer.push(args.join(' '));
+                    return true;
+                }
+            }
+
+            if (level === this.Level.debug) {
+                buffer.push(args.join(' '));
+                return true;
+            }
+
+            return false;
+        },
+
+        closeBuffer: function () {
+            if (buffer.length > 0) {
+                console.log(header, buffer.join(' ; '));
+                buffer.length = 0;
+            }
         },
 
         level: function (_level) {
@@ -64,6 +98,7 @@
     // internal
     var level = Logger.Level.silent;
     var header = '[GT/R]  ';
+    var buffer = [];
 
     // Publication
     if (!root.GazeTargets) {

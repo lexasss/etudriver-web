@@ -18,8 +18,6 @@
 
         search: function (currentFixation) {
 
-            return null;
-
             if (!isInZone(currentFixation.saccade)) {
                 return null;
             }
@@ -44,22 +42,22 @@
     var zones;
     var logger;
 
-    // function isInZone(saccade) {
-    //     var heightDelta = -saccade.x * slope;
-    //     var left = -lineMaxWidth;
-    //     var top = minMarginY - heightDelta;
-    //     var bottom = maxMarginY + heightDelta;
-    //     return left < saccade.x && saccade.x < 0 && 
-    //            top < saccade.y && saccade.y < bottom;
-    // }
-
     function isInZone(saccade) {
+        var heightDelta = -saccade.x * slope;
         var left = -lineMaxWidth;
-        var top = minMarginY;
-        var bottom = maxMarginY;
-        return left < saccade.x && saccade.x < -20 && 
+        var top = minMarginY - heightDelta;
+        var bottom = maxMarginY + heightDelta;
+        return left < saccade.x && saccade.x < 0 && 
                top < saccade.y && saccade.y < bottom;
     }
+
+    // function isInZone(saccade) {
+    //     var left = -lineMaxWidth;
+    //     var top = minMarginY;
+    //     var bottom = maxMarginY;
+    //     return left < saccade.x && saccade.x < -20 && 
+    //            top < saccade.y && saccade.y < bottom;
+    // }
 
     function compareAgainstCurrentLine(currentFixation) {
         

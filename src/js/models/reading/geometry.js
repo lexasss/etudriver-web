@@ -150,7 +150,7 @@
             var type = this.fixations.length < 5 ? 'linear' : 'polynomial';
             var model = window.regression.model( type, this.fixations, 2 );
             this.fitEq = model.equation;
-            logger.log( 'model update for line', this.index, ':', model.string );
+            logger.push( 'model update for line', this.index, ':', model.string );
         }
     };
 
@@ -167,7 +167,7 @@
             if (index > 0 && fix[2].newLine) {       // the current line started here
                 if (lastIndex - index + 1 > 3) {     // lets have at least 4 fixations
                     this.fixations = this.fixations.slice( index );
-                    logger.log( '    line fixations: reduced' );
+                    logger.push( '    line fixations: reduced' );
                 }
                 break;
             }
@@ -179,7 +179,8 @@
     Line.prototype.fit = function (x, y) {
         if (this.fitEq) {
             var result = y - window.regression.fit( this.fitEq, x );
-            logger.log( 'fitting', x, 'to line', this.index, ': error is ', result );
+            //logger.push( 'fitting', x, 'to line', this.index, ': error is ', result );
+            logger.push( 'e[', this.index, '] =', Math.floor( result ) );
             return Math.abs( result );
         }
         return Number.MAX_VALUE;

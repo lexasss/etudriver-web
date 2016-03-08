@@ -488,15 +488,15 @@ if (window.QUnit) {
     ];
 
     var fix_progressive = [
-        { x: -62, y: -99, d: 701 },
-        { x: 117, y: -133, d: 167 },
-        { x: 123, y: -96, d: 733 },
-        { x: 185, y: -62, d: 634 },
-        { x: 293, y: -40, d: 601 },
-        { x: 399, y: -20, d: 534 },
-        { x: 458, y: -19, d: 499 },
+        { x: -62, y: -9, d: 701 },
+        { x: 117, y: -13, d: 167 },
+        { x: 123, y: -6, d: 733 },
+        { x: 185, y: -2, d: 634 },
+        { x: 293, y: 0, d: 601 },
+        { x: 399, y: -2, d: 534 },
+        { x: 458, y: -1, d: 499 },
         { x: 542, y: -9, d: 466 },
-        { x: 664, y: -24, d: 433 },
+        { x: 664, y: -4, d: 433 },
         { x: -62, y: -181, d: 400 },
 //        { x: 671, y: 188, d: 133 },
         { x: 734, y: -21, d: 367 },
@@ -525,10 +525,10 @@ if (window.QUnit) {
         { x: 794, y: 117, d: 800 },
         { x: 94, y: 203, d: 467 },
         { x: 170, y: 218, d: 300 },
-        { x: 236, y: 231, d: 718 },
+        { x: 236, y: 211, d: 718 },
         { x: 331, y: 207, d: 266 },
         { x: 393, y: 213, d: 666 },
-        { x: 464, y: 233, d: 635 },
+        { x: 464, y: 223, d: 635 },
         { x: -62, y: -312, d: 100 },
 //        { x: 532, y: 342, d: 133 },
         { x: 612, y: 208, d: 401 },
@@ -587,16 +587,16 @@ if (window.QUnit) {
         { x: 540, y: 40, d: 733 },
         { x: 646, y: 11, d: 233 },
         { x: 736, y: 10, d: 1001 },
-        { x: 170, y: 94, d: 833 },
+        { x: 170, y: 64, d: 833 },
         { x: 238, y: 75, d: 400 },
         { x: -62, y: -227, d: 300 },
         //{ x: 322, y: 237, d: 400 },
         { x: -62, y: -209, d: 267 },
         //{ x: 327, y: 224, d: 52 },
         { x: 376, y: 86, d: 267 },
-        { x: 459, y: 97, d: 500 },
+        { x: 459, y: 77, d: 500 },
         { x: -62, y: -125, d: 66 },
-        { x: 524, y: 78, d: 200 },
+        { x: 524, y: 88, d: 200 },
         { x: 660, y: 39, d: 600 },
         { x: 732, y: 29, d: 401 },
         { x: 812, y: 2, d: 434 },
@@ -960,7 +960,7 @@ if (window.QUnit) {
                 this.linePredictor.init( geomModel );
                 console.log('################### LinePredictor ##################');
 
-                return this.linePredictor.get( switched, newLine, fixation, null, 0 );
+                return this.linePredictor.getAlways( switched, newLine, fixation, null, 0 );
             };
         },
         afterEach: function() {
@@ -1086,7 +1086,7 @@ if (window.QUnit) {
                 notMapped++;
             }
         });
-        assert.ok( mapped === 25 && notMapped === 0, 'simulated data' );
+        assert.ok( mapped === 21 && notMapped === 4, 'simulated data' );
         
         // test 2
         mapped = 0;
@@ -1098,7 +1098,7 @@ if (window.QUnit) {
                 notMapped++;
             }
         });
-        assert.ok( mapped === 25 && notMapped === 0, 'mouse-collected data' );
+        assert.ok( mapped === 21 && notMapped === 4, 'mouse-collected data' );
 
         var words = layout2;
 
@@ -1116,7 +1116,7 @@ if (window.QUnit) {
         });
         lines.forEach( function(item, index) { console.log(index, item); } );
         console.log('none', noLine);
-        assert.ok( lines[0] === 10 && lines[1] === 9 && lines[2] === 9 && lines[3] === 9 && noLine === 0, 'real: progressive' );
+        assert.ok( lines[0] === 6 && lines[1] === 9 && lines[2] === 9 && lines[3] === 9 && noLine === 4, 'real: progressive' );
 
         // test 4: Regressive reading
         lines = [];
@@ -1132,7 +1132,7 @@ if (window.QUnit) {
         });
         lines.forEach( function(item, index) { console.log(index, item); } );
         console.log('none', noLine);
-        assert.ok( lines[0] === 28 && noLine === 0, 'real: regressive' );
+        assert.ok( lines[0] === 22 && noLine === 6, 'real: regressive' );
         
         // test 5: line up
         lines = [];
@@ -1148,9 +1148,10 @@ if (window.QUnit) {
         });
         lines.forEach( function(item, index) { console.log(index, item); } );
         console.log('none', noLine);
-        assert.ok( lines[0] === 14 && lines[1] === 8 && noLine === 0, 'real: lineup' );
+        assert.ok( lines[0] === 13 && lines[1] === 5 && noLine === 4, 'real: lineup' );
         
         // test 5: line down
+        this.logger.level( this.logger.Level.debug );
         lines = [];
         noLine = 0;
         for (var i = 0; i < 11; i++) { lines.push(0); }
@@ -1164,6 +1165,7 @@ if (window.QUnit) {
         });
         lines.forEach( function(item, index) { console.log(index, item); } );
         console.log('none', noLine);
-        assert.ok( lines[0] === 6 && lines[6] === 7 && noLine === 0, 'real: linedown' );
+        assert.ok( lines[0] === 1 && lines[6] === 3 && noLine === 9, 'real: linedown' );
+        this.logger.level( this.logger.Level.silent );
     });
 }
