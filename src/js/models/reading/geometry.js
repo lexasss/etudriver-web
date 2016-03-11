@@ -52,6 +52,10 @@
     };
 
     // internal
+    var modelMaxGradient = 0.15;
+    var modelTypeSwitchThreshold = 8;
+    var modelRemoveOldFixThreshold = 14;
+    
     var isTextFixed;
 
     var lines = [];
@@ -147,10 +151,21 @@
 
         if (this.fixations.length > 1) {
             this.removeOldFixation();
-            var type = this.fixations.length < 5 ? 'linear' : 'polynomial';
+            var type = this.fixations.length < modelTypeSwitchThreshold ? 'linear' : 'polynomial';
             var model = window.regression.model( type, this.fixations, 2 );
             this.fitEq = model.equation;
-            logger.push( 'model update for line', this.index, ':', model.string );
+            logger.push( 'model for line', this.index, ':', this.fitEq );
+
+            if (type === 'linear') {    // put restriction on the gradient
+                if (this.fitEq[1] < -modelMaxGradient) {
+                    this.fitEq = fixLinearModel( this.fixations, -modelMaxGradient );
+                    logger.push( 'model reset to', this.fitEq );
+                }
+                else if (this.fitEq[1] > modelMaxGradient) {
+                    this.fitEq = fixLinearModel( this.fixations, modelMaxGradient );
+                    logger.push( 'model reset to', this.fitEq );
+                }
+            }
         }
     };
 
@@ -165,9 +180,9 @@
         while (index > 0) {
             fix = this.fixations[ index ];
             if (index > 0 && fix[2].newLine) {       // the current line started here
-                if (lastIndex - index + 1 > 3) {     // lets have at least 4 fixations
+                if (lastIndex - index + 1 > modelRemoveOldFixThreshold) {     // lets have at least 15 fixations
                     this.fixations = this.fixations.slice( index );
-                    logger.push( '    line fixations: reduced' );
+                    logger.push( 'line fixations: reduced' );
                 }
                 break;
             }
@@ -181,7 +196,7 @@
             var result = y - window.regression.fit( this.fitEq, x );
             //logger.push( 'fitting', x, 'to line', this.index, ': error is ', result );
             logger.push( 'e[', this.index, '] =', Math.floor( result ) );
-            return Math.abs( result );
+            return result;
         }
         return Number.MAX_VALUE;
     };
@@ -197,6 +212,15 @@
     Word.prototype.toString = function () {
         return this.rect.left + ',' + this.rect.top + ' / ' + this.line.index;
     };
+
+    function fixLinearModel( fixations, gradient ) {
+        var sum = 0;
+        for (var i = 0; i < fixations.length; ++i) {
+            var fix = fixations[i];
+            sum += fix[1] - gradient * fix[0];
+        }
+        return [sum / fixations.length, gradient];
+    }
 
     // Publication
     if (!root.GazeTargets) {

@@ -6,12 +6,16 @@
 
     var LinePredictor = {
 
-        init: function(_geomModel) {
+        init: function(_geomModel, _settings) {
             geomModel = _geomModel;
 
+            _settings = _settings || {};
+            currentLinePrefRate = _settings.currentLinePrefRate || 1.3;
+
             guessMaxDist = 3 * geomModel.lineSpacing;
+            currentLineDefDist = 0.5 * geomModel.lineSpacing;
             currentLineMaxDist = 0.7 * geomModel.lineSpacing;
-            definiteFollowingThreshold = 0.5 * geomModel.lineSpacing;
+            newLineSaccadeLength = -0.7 * geomModel.lineWidth;
 
             logger = root.GazeTargets.Logger;
         },
@@ -25,11 +29,11 @@
             if (!state.isReading) {
                 return null;
             }
-            else if (currentFixation.previous && currentFixation.previous.saccade.newLine) {
+            else if (currentFixation.previous && currentFixation.previous.saccade.newLine && !currentLine.fitEq) {
                 result = checkAgainstCurrentLine( currentFixation, offset );
             }
             else if ((state.isReading && state.isSwitched) || currentFixation) {
-                result = guessCurrentLine( currentFixation.x, currentFixation.y, currentLine, offset );
+                result = guessCurrentLine( currentFixation, currentLine, offset );
             }
 
             if (!result) {
@@ -58,7 +62,7 @@
                 result = getClosestLine( currentFixation, offset );
             }
             else if (state.isReading && state.isSwitched) {
-                result = guessCurrentLine( currentFixation.x, currentFixation.y, currentLine, offset );
+                result = guessCurrentLine( currentFixation, currentLine, offset );
             }
             // else if (switched.toNonReading) {
             //     logger.log('    current line reset');
@@ -70,7 +74,7 @@
                 result = checkAgainstCurrentLine( currentFixation, offset );
             }
             else if (currentFixation) {
-                result = guessCurrentLine( currentFixation.x, currentFixation.y, currentLine, offset );
+                result = guessCurrentLine( currentFixation, currentLine, offset );
             }
 
             if (!result) {
@@ -93,51 +97,105 @@
     var geomModel;
     var logger;
 
-    var currentLinePrefRate = 1.3;
+    var currentLinePrefRate;
     var guessMaxDist;
     var currentLineMaxDist;
-    var definiteFollowingThreshold;
+    var currentLineDefDist;
+    var newLineSaccadeLength;
 
     // TODO: penalize all lines but the current one - the current lline should get priority
-    function guessCurrentLine(x, y, currentLine, offset) {
+    function guessCurrentLine(fixation, currentLine, offset) {
 
         var result = null;
+        var perfectLineMatch = false;
         var minDiff = Number.MAX_VALUE;
+        var minDiffAbs = Number.MAX_VALUE;
         var currentLineIndex = currentLine ? currentLine.index : -1;
+        var x = fixation.x;
+        var y = fixation.y;
 
         var lines = geomModel.lines;
         for (var i = 0; i < lines.length; ++i) {
             var line = lines[i];
-            var diff = Math.abs( line.fit( x, y ) );
+            var diff = line.fit( x, y );
+            var diffAbs = Math.abs( diff );
             if (currentLineIndex === line.index) {          // current line has priority:
-                if (diff < definiteFollowingThreshold) {     // it must be followed in case the current fixation follows it
+                if (diffAbs < currentLineDefDist) {     // it must be followed in case the current fixation follows it
                     result = line;
-                    minDiff = diff;
-                    logger.push( 'following the current line' );
+                    minDiffAbs = diffAbs;
+                    perfectLineMatch = true;
+                    logger.push( 'following the current line #', currentLineIndex );
                     break;
                 }
                 else {                                  // and also otherwise
                     diff /= currentLinePrefRate;
+                    diffAbs = Math.abs( diff );
                     logger.push( '>>', Math.floor( diff ) );
                 }
             }
-            if (diff < minDiff) {
+            if (diffAbs < minDiffAbs) {
+                minDiffAbs = diffAbs;
                 minDiff = diff;
                 result = line;
             }
         }
 
-        logger.push( 'diff =', Math.floor( minDiff ) );
-        if (minDiff < currentLineMaxDist ) {
-            logger.push( 'most likely:', result ? result.index : '---' );
+        if (!perfectLineMatch) {
+            logger.push( 'diff =', Math.floor( minDiff ) );
+        }
+
+        // threshold must depend on the saccade type: long regressive is most likely belong to a new line, 
+        // thus compare the diff against reduced threshold from the lower bound
+
+        var threshold = fixation.saccade.x < newLineSaccadeLength ? currentLineDefDist : currentLineMaxDist;
+        if (minDiffAbs < threshold ) {
+            if (!perfectLineMatch) {
+                logger.push( 'most likely:', result ? result.index : '---' );
+            }
         }
         else if (currentLine) {     // maybe, this is a quick jump to some other line?
-            //minDiff = (y + offset) - currentLine.center.y;
             logger.push( 'dist =', Math.floor( minDiff ) );
             var lineIndex = currentLineIndex + Math.round( minDiff / geomModel.lineSpacing );
-            if (0 <= lineIndex && lineIndex < lines.length) {   // yes, the gaze point lands on some line
-                result = lines[ lineIndex ];
-                logger.push( 'guessed jump to line #', result.index );
+            if (0 <= lineIndex && lineIndex < lines.length) {
+
+                var acceptSupposedLine = true;
+                // check which one fits better
+                var supposedLine = lines[ lineIndex ];
+                if (supposedLine.fitEq) {
+                    var supposedLineDiff = Math.abs( supposedLine.fit( x, y ) );
+                    logger.push( 'new dist =', Math.floor( supposedLineDiff ) );
+                    if (supposedLineDiff >= minDiffAbs) {
+                        acceptSupposedLine = false;
+                        logger.push( 'keep the line #', result.index );
+                    }
+                }
+                else if (supposedLine.index === currentLineIndex + 1) { // maybe, we should stay on the curretn line?
+                    var avgOffset = 0;
+                    var count = 0;
+                    for (var li = 0; li < lines.length; ++li) {
+                        var line = lines[ li ];
+                        if (li === currentLineIndex || !line.fitEq) {
+                            continue;
+                        }
+
+                        avgOffset += line.fit( x, y ) - (currentLineIndex - li) * geomModel.lineSpacing;
+                        count++;
+                    }
+
+                    if (count) {
+                        avgOffset /= count;
+                        if (avgOffset < threshold) {
+                            acceptSupposedLine = false;
+                            result = currentLine;
+                            logger.push( 'averaged... stay on line #', result.index );
+                        }
+                    }
+                }
+
+                if (acceptSupposedLine) {
+                    result = supposedLine;
+                    logger.push( 'guessed jump to line #', result.index );
+                }
             }
             else {
                 result = null;
@@ -154,6 +212,7 @@
         var minDist = Number.MAX_VALUE;
         var dist;
         var currentLine = null;
+        var previousLine = null;
         var closestFixation = null;
 
         var fixation = currentFixation.previous;
@@ -165,6 +224,9 @@
                     currentLine = line;
                 }
                 if (line.index != currentLine.index) {
+                    if (currentLine.index - line.index === 1) {
+                        previousLine = line;
+                    }
                     break;
                 }
                 dist = Math.abs( currentFixation.y + offset - currentLine.center.y );
@@ -178,8 +240,23 @@
         }
 
         logger.push('dist :', minDist);
+
         var result = closestFixation && (minDist < currentLineMaxDist) ? currentLine : null;
         logger.push('follows the current line:', result ? 'yes' : 'no');
+
+        // If recognized as not following but still not too far and recently jumped from the previous line,
+        // then check whether it fits this previous line
+        if (!result && previousLine && minDist < geomModel.lineSpacing) {
+            var diff = Math.abs( previousLine.fit( currentFixation.x, currentFixation.y ) );
+            if (diff < currentLineMaxDist) {
+                result = previousLine;
+                logger.push('back to the prev line');
+            }
+            else {
+                result = currentLine;
+                logger.push('still better fit than to the previous line');
+            }
+        }
 
         return result;
     }

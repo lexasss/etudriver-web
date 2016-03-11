@@ -85,7 +85,7 @@
             },
             Campbell: {
                 forgettingFactor: 0.2,
-                readingThreshold: 4,        // number of fixations
+                readingThreshold: 3,        // number of fixations
                 nonreadingThreshold: 2,     // number of fixations
                 slope: 0.15,
                 progressiveLeft: -1.5,      // em

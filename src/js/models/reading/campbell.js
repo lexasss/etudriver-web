@@ -21,7 +21,21 @@
         //      readingZoneMarginY      em
         //      neutralZoneMarginY      em
         init: function (_settings, _commons) {
-            settings = _settings;
+            _settings = _settings || {};
+            _commons = _commons || {};
+
+            settings = {
+                forgettingFactor: _settings.forgettingFactor || 0.2,
+                readingThreshold: _settings.readingThreshold || 3,
+                nonreadingThreshold: _settings.nonreadingThreshold || 2,
+                slope: _settings.slope || 0.15,
+                progressiveLeft: _settings.progressiveLeft || -1,
+                progressiveRight: _settings.progressiveRight || 9,
+                readingZoneMarginY: _settings.readingZoneMarginY || 1,
+                neutralZoneMarginY: _settings.neutralZoneMarginY || 2
+            };
+
+            if (_commons.fixedText === undefined) _commons.fixedText = true;
 
             geometry = root.GazeTargets.Models.Reading.Geometry;
             geometry.init(_commons.fixedText);
@@ -70,6 +84,12 @@
 
                 if (switched.toReading && mapped) {
                     backtrackFixations( newFixation, mapped.line );
+                }
+                else if (isReadingMode && mapped) {
+                    var outlier = searchOutlier( newFixation, mapped.line.index );
+                    if (outlier) {
+                        backtrackOutlier( outlier, mapped.line );
+                    }
                 }
                 //logger.log('new fix: ' + dx + ',' + dy + ' = ' + saccade + ' : ' + (isReadingFixation ? 'reading' : '-'));
             }
@@ -215,7 +235,7 @@
         }
     }
 
-    function map(fixation, line) {
+    function map(fixation, line, skipFix) {
 
         logger.closeBuffer();
         logger.push('[MAP]');
@@ -229,7 +249,7 @@
             return null;
         }
 
-        if (isReadingMode) {
+        if (isReadingMode && !skipFix) {
             line.addFixation( fixation );
         }
         
@@ -252,21 +272,56 @@
             }
         }
 
-        logger.push('    [d=', minDist, ']', result ? result.line.index + ',' + result.index : '' );
+        logger.push('[d=', Math.floor( minDist ), ']', result ? result.line.index + ',' + result.index : '' );
         return result;
     }
 
     function backtrackFixations( currentFixation, line ) {
         logger.log( '------ backtrack ------' );    
+        var isReadingZone = true;
         var fixation = currentFixation.previous;
         while (fixation && !fixation.saccade.newLine) {
             if (fixation.saccade.zone === zone.nonreading) {
+                fixation.word = map( fixation, line, true );
+                break;
+            }
+            if (!isReadingZone && fixation.saccade.zone !== zone.reading) {
                 break;
             }
             fixation.word = map( fixation, line );
+            isReadingZone = fixation.saccade.zone === zone.reading;
             fixation = fixation.previous;
         }
         logger.log( '------ ///////// ------' );
+    }
+
+    function searchOutlier( fixation, lineIndex ) {
+        var candidate = null;
+        var pattern = [true, false, true];
+        var matched = true;
+        var index = 0;
+        while (index < 2 && !matched && fixation && !fixation.saccade.newLine) {
+            if (!fixation.word) {
+                matched = false;
+                break;
+            }
+
+            matched = matched && (lineIndex === fixation.word.line.index) === pattern[ index ];
+            if (index === 1) {
+                candidate = fixation;
+            }
+
+            fixation = fixation.previous;
+            ++index;
+        }
+                
+        if (matched) console.log('backtracked', candidate);
+
+        return matched ? candidate : null;
+    }
+    
+    function backtrackOutlier( fixation, line ) {
+        console.log('outlier is backtracked: line #', line.index);
     }
 
     function select(word) {
