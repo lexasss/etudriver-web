@@ -63,7 +63,10 @@
 
                 // new line searcfh disabled -->
                 //var newLine = classifySaccadeZone( newFixation );
-                var guessedZone = zone.match( newFixation.saccade );
+                var guessedZone = scoreReading === 0 && newFixation.saccade.x < 0 ?
+                    zone.nonreading :
+                    zone.match( newFixation.saccade );
+
                 logger.push( 'zone', guessedZone );
                 newFixation.saccade.zone = guessedZone;
                 updateScores( guessedZone );
@@ -88,14 +91,17 @@
                 else if (isReadingMode && mapped) {
                     var outlier = searchOutlier( newFixation, mapped.line.index );
                     if (outlier) {
-                        backtrackOutlier( outlier, mapped.line );
+                        logger.log('outlier is backtracked: line #', mapped.line.index);
+                        map(outlier, mapped.line, true);
                     }
                 }
                 //logger.log('new fix: ' + dx + ',' + dy + ' = ' + saccade + ' : ' + (isReadingFixation ? 'reading' : '-'));
+                
+                lastMapped = mapped;
             }
 
-            lastMapped = mapped;
-            select( lastMapped );
+            lastFixation = newFixation;
+            //select( lastMapped );
 
             logger.closeBuffer();
 
@@ -117,10 +123,15 @@
             offset = 0;
             currentLine = null;
             lastMapped = null;
+            lastFixation = null;
         },
 
         currentWord: function () {
             return lastMapped;
+        },
+
+        mappedFix: function () {
+            return lastFixation;
         }
     };
 
@@ -140,6 +151,7 @@
     var offset;
     var currentLine;
     var lastMapped;
+    var lastFixation;
 
     var logger;
 
@@ -298,15 +310,18 @@
     function searchOutlier( fixation, lineIndex ) {
         var candidate = null;
         var pattern = [true, false, true];
-        var matched = true;
+        var matched = 0;
         var index = 0;
-        while (index < 2 && !matched && fixation && !fixation.saccade.newLine) {
+
+        while (index < 3 && fixation) {
             if (!fixation.word) {
-                matched = false;
                 break;
             }
 
-            matched = matched && (lineIndex === fixation.word.line.index) === pattern[ index ];
+            var isOnCurrentLine = lineIndex === fixation.word.line.index;
+            if (isOnCurrentLine === pattern[ index ]) {
+                ++matched;
+            }
             if (index === 1) {
                 candidate = fixation;
             }
@@ -315,15 +330,9 @@
             ++index;
         }
                 
-        if (matched) console.log('backtracked', candidate);
-
-        return matched ? candidate : null;
+        return matched === pattern.length ? candidate : null;
     }
     
-    function backtrackOutlier( fixation, line ) {
-        console.log('outlier is backtracked: line #', line.index);
-    }
-
     function select(word) {
         if (word) {
             // var rect = word.dom.getBoundingClientRect();

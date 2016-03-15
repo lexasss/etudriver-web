@@ -2,6 +2,9 @@ if (window.QUnit) {
     var req = document.getElementById('req');
     req.style.display = 'none';
 
+    var output1 = document.getElementById('output1');
+    var output2 = document.getElementById('output2');
+
     function Word(rect) {
         this.left = rect.left;
         this.top = rect.top;
@@ -748,6 +751,30 @@ if (window.QUnit) {
         { x: 453, y: -186, d: 99},
     ];
 
+    var fix_regressive_3 = [
+        { x: 436, y: -114, d: 100},
+        { x: 162, y: -54, d: 100},
+        { x: 243, y: -76, d: 167},
+        { x: 301, y: -38, d: 100},
+        { x: 426, y: -70, d: 100},
+        { x: 501, y: -20, d: 100},
+        { x: 659, y: -52, d: 100},
+        { x: 745, y: -23, d: 133},
+        { x: 832, y: -23, d: 100},
+        { x: 951, y: -24, d: 100},
+        { x: 1008, y: -38, d: 100},
+        { x: 1110, y: -21, d: 100},
+        { x: 1160, y: -42, d: 100},
+        { x: 284, y: -37, d: 100},
+        { x: 243, y: -48, d: 100},
+        { x: 342, y: -54, d: 133},
+        { x: 403, y: -11, d: 100},
+        { x: 490, y: -19, d: 100},
+        { x: 555, y: 66, d: 633},
+        { x: 607, y: 31, d: 99},
+        { x: 527, y: -17, d: 100}
+    ];
+
     var fix_lineup = [
         { x: -62, y: -99, d: 500 },
         { x: 164, y: 19, d: 467 },
@@ -834,30 +861,6 @@ if (window.QUnit) {
         { x: -62, y: -190, d: 167 },
         { x: -62, y: 14, d: 34 },
         { x: 725, y: 204, d: 67 },
-    ];
-
-    var fix_linedown_2 = [
-        { x: 436, y: -114, d: 100},
-        { x: 162, y: -54, d: 100},
-        { x: 243, y: -76, d: 167},
-        { x: 301, y: -38, d: 100},
-        { x: 426, y: -70, d: 100},
-        { x: 501, y: -20, d: 100},
-        { x: 659, y: -52, d: 100},
-        { x: 745, y: -23, d: 133},
-        { x: 832, y: -23, d: 100},
-        { x: 951, y: -24, d: 100},
-        { x: 1008, y: -38, d: 100},
-        { x: 1110, y: -21, d: 100},
-        { x: 1160, y: -42, d: 100},
-        { x: 284, y: -37, d: 100},
-        { x: 243, y: -48, d: 100},
-        { x: 342, y: -54, d: 133},
-        { x: 403, y: -11, d: 100},
-        { x: 490, y: -19, d: 100},
-        { x: 555, y: 66, d: 633},
-        { x: 607, y: 31, d: 99},
-        { x: 527, y: -17, d: 100}
     ];
 
     var fix_linedown_3 = [
@@ -1118,7 +1121,7 @@ if (window.QUnit) {
 
                     var matchResult = this.zone.match(saccade);
                     
-                    console.log(matchResult);
+                    //console.log(matchResult);
 
                     if (mode == 'all') {
                         result = result && ((matchResult === lastFix.zone) || (matchResult & lastFix.zone) > 0);
@@ -1147,7 +1150,7 @@ if (window.QUnit) {
             }; 
         }, 'any'), 'just following word left-top rect location' );
     });
-
+/*
     QUnit.module( 'NewLineDetector module', {
         beforeEach: function() {
             this.logger = window.GazeTargets.Logger;
@@ -1234,6 +1237,7 @@ if (window.QUnit) {
             return fix; 
         } ), 9, 'twisted + randomized' );
     });
+*/
 
     QUnit.module( 'LinePredictor module', {
         beforeEach: function() {
@@ -1317,6 +1321,8 @@ if (window.QUnit) {
             this.campbell.init();
             this.run = function (layout, fixations, converter, title, callback ) {
                 
+                output1.value = '';
+                output2.value = '';
                 this.campbell.reset();
                 console.log('################### Campbell ' + (title ? title + ' ' : '') + '##################');
 
@@ -1327,21 +1333,28 @@ if (window.QUnit) {
                     if (fixation.x < -30) {
                         continue;
                     }
-                    console.log('---');
+                    this.logger.log('---');
                     
                     if (converter) {
                         fixation = converter(fixation);
                     }
 
+                    var mappedFix = null;
                     for (j = 1; j <= 8; ++j) {
                         fixation.duration = 33 * j;
                         this.campbell.feed(layout, fixation);
+                        var fix = this.campbell.mappedFix();
+                        if (fix) {
+                            //output1.value += '{ x: ' + fix.x + ', y: ' + fix.y + ', d: ' + fix.duration + ' },\n';
+                            //output2.value += fix.x + '\t' + fix.y + '\n';
+                            mappedFix =fix; 
+                        }
                     }
 
                     var mappedWord = this.campbell.currentWord();
 
                     if (callback) {
-                        callback( mappedWord );
+                        callback( mappedWord, mappedFix );
                     }
                 }
             };
@@ -1357,54 +1370,64 @@ if (window.QUnit) {
         var test = (data, expected, title, converter) => {
             var allOK = true;
             var lines = [];
-            var noLine = 0;
-            for (var i = 0; i < 11; i++) { lines.push(0); }
-            if (lines.length != (expected.length - 1)) {
+            var fixes = [];
+            var fixSequence = [];
+            for (var i = 0; i < 12; i++) { lines.push(0); }
+            if (lines.length != expected.length) {
                 console.error('Incorrect length of expected results: ', expected.length, ', must be', lines.length);
                 allOK = false;
             }
             else {
-                this.run( words, data, converter, title, function (word) {
-                    var line = word ? word.line : null;
-                    if (line) {
-                        lines[line.index]++;
-                    } else {
-                        noLine++;
+                this.run( words, data, converter, title, function (word, fix) {
+                    if (fix) {
+                        fixes.push( fix );
                     }
                 });
+
+                for (i = 0; i < fixes.length; i++) {
+                    var fix = fixes[i];
+                    if (fix.word) {
+                        lines[ fix.word.line.index ]++;
+                        fixSequence.push( fix.word.line.index );
+                    }
+                    else {
+                        lines[ 11 ]++;
+                        fixSequence.push( '-' );
+                    }
+                }
+                
+                console.log(fixSequence);
                 console.log(lines);
-                console.log('none', noLine);
                 for (i = 0; i < lines.length; i++) { 
                     allOK = allOK && lines[i] === expected[i];
                 }
-                allOK = allOK && noLine === expected[i];
             }
             assert.ok( allOK, title );
         } 
 
         words = layout;
 
-        test( simulated, [15, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3], 'simulated' );
-        test( simulated, [15, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3], 'simulated 2', function (fix) { return { x: fix.x, y: fix.y }; } );
+        test( simulated, [18, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'simulated' );
+        test( simulated, [18, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'simulated 2', function (fix) { return { x: fix.x, y: fix.y }; } );
         test( nonreading, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7], 'non-reading' );
-        
+
         words = layout2;
 
-        test( fix_progressive, [7, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 3], 'progressive 1' );
-        test( fix_progressive_2, [11, 13, 14, 0, 0, 0, 0, 0, 0, 0, 0, 3], 'progressive 2' );
-        //this.logger.level( this.logger.Level.debug );
-        test( fix_progressive_3, [12, 15, 15, 16, 11, 0, 0, 0, 0, 0, 0, 3], 'progressive 3' );
-        //this.logger.level( this.logger.Level.silent );
+        test( fix_progressive, [10, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0], 'progressive 1' );
+        test( fix_progressive_2, [14, 13, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'progressive 2' );
+        test( fix_progressive_3, [14, 15, 15, 16, 11, 0, 0, 0, 0, 0, 0, 1], 'progressive 3' );
 
-        test( fix_regressive, [23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5], 'regressive' );
-        test( fix_regressive_2, [43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12], 'regressive 2' );
+        test( fix_regressive, [27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 'regressive' );
+        test( fix_regressive_2, [47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8], 'regressive 2' );
+        test( fix_regressive_3, [17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4], 'regression 3' );
  
-        test( fix_lineup, [14, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3], 'lineup' );
-        test( fix_lineup_2, [21, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3], 'lineup 2' );
+        test( fix_lineup, [17, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'lineup' );
+        test( fix_lineup_2, [23, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 'lineup 2' );
 
-        test( fix_linedown, [2, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7], 'linedown' ); 
-        test( fix_linedown_2, [1, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7], 'linedown 2' );
-        test( fix_linedown_3, [8, 11, 5, 0, 0, 0, 0, 0, 0, 0, 0, 11], 'linedown 3' );
-        test( fix_linedown_4, [3, 5, 14, 0, 0, 0, 0, 0, 0, 0, 0, 4], 'linedown 4' );
+        test( fix_linedown, [4, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2], 'linedown' ); 
+        //this.logger.level( this.logger.Level.debug );
+        //this.logger.level( this.logger.Level.silent );
+        test( fix_linedown_3, [12, 11, 9, 0, 0, 0, 0, 0, 0, 0, 0, 3], 'linedown 3' );
+        test( fix_linedown_4, [6, 5, 14, 0, 0, 0, 0, 0, 0, 0, 0, 1], 'linedown 4' );
     });
 }
